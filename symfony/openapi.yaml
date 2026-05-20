@@ -1,0 +1,713 @@
+openapi: 3.0.0
+info:
+  title: Bib-App API
+  description: REST API für die Klassenverwaltung und Stundenplan-Verwaltung
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: http://localhost/
+    description: Development server
+
+tags:
+  - name: Calendar
+    description: Stundenplan und Terminänderungen
+  - name: Class
+    description: Klassenverwaltung
+  - name: User
+    description: Benutzerprofilveraltung
+  - name: Password
+    description: Passwort-Management
+
+paths:
+  /restapi.php?action=getCalendar:
+    get:
+      tags:
+        - Calendar
+      summary: Aktuellen Stundenplan abrufen
+      description: Holt den aktuellen Stundenplan für die Klasse des eingeloggten Benutzers
+      responses:
+        '200':
+          description: Stundenplan erfolgreich abgerufen
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarEvent'
+        '500':
+          description: Stundenplan konnte nicht geladen werden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /restapi.php?action=getChanges:
+    get:
+      tags:
+        - Calendar
+      summary: Terminänderungen abrufen
+      description: Holt die Liste aller geänderten, neuen oder gelöschten Termine für die Klasse
+      responses:
+        '200':
+          description: Änderungen erfolgreich abgerufen
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChangeRecord'
+        '500':
+          description: Änderungen konnten nicht abgefragt werden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /restapi.php?action=getNotedChanges:
+    get:
+      tags:
+        - Calendar
+      summary: Gelesene Änderungen abrufen
+      description: Holt die Liste aller vom Benutzer als gelesen markierten Terminänderungen
+      responses:
+        '200':
+          description: Gelesene Änderungen erfolgreich abgerufen
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotedChange'
+        '500':
+          description: Fehler beim Abrufen der gelesenen Termine
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /restapi.php?action=writeNotedChanges:
+    post:
+      tags:
+        - Calendar
+      summary: Terminänderung als gelesen markieren
+      description: Markiert eine Terminänderung als vom Benutzer gelesen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - termin_id
+              properties:
+                termin_id:
+                  type: string
+                  description: Die ID des Termins
+      responses:
+        '200':
+          description: Termin erfolgreich als gelesen markiert
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  aenderungen_notiert:
+                    type: boolean
+        '500':
+          description: Eintrag konnte nicht gespeichert werden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /restapi.php?action=getClass:
+    get:
+      tags:
+        - Class
+      summary: Alle Klassen abrufen
+      description: Ruft alle verfügbaren Klassen ab
+      responses:
+        '200':
+          description: Klassen erfolgreich abgerufen
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Class'
+
+  /restapi.php?action=getClassById:
+    get:
+      tags:
+        - Class
+      summary: Klasse des Benutzers abrufen
+      description: Ruft die Klasse des eingeloggten Benutzers ab
+      responses:
+        '200':
+          description: Klasse erfolgreich abgerufen
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Class'
+        '401':
+          description: Nicht autorisiert
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /restapi.php?action=writeClass:
+    post:
+      tags:
+        - Class
+      summary: Neue Klasse erstellen
+      description: Erstellt eine neue Klasse mit Stundenplan-Link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - klassenname
+              properties:
+                klassenname:
+                  type: string
+                  description: Name der Klasse
+                ical_link:
+                  type: string
+                  description: Link zur iCal-Datei
+      responses:
+        '201':
+          description: Klasse erfolgreich erstellt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  erfolg:
+                    type: boolean
+                  klassenname:
+                    type: string
+        '400':
+          description: Klassenname ist erforderlich
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /restapi.php?action=updateClass&id={id}:
+    put:
+      tags:
+        - Class
+      summary: Klasse aktualisieren
+      description: Aktualisiert den Namen und/oder iCal-Link einer Klasse
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Klassen-ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                klassenname:
+                  type: string
+                  description: Neuer Klassenname
+                ical_link:
+                  type: string
+                  description: Neuer iCal-Link
+      responses:
+        '200':
+          description: Klasse erfolgreich aktualisiert
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  erfolg:
+                    type: boolean
+        '400':
+          description: ID fehlt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /restapi.php?action=deleteClass&id={id}:
+    delete:
+      tags:
+        - Class
+      summary: Klasse löschen
+      description: Löscht eine Klasse und alle zugehörigen Daten (nur Admin)
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Klassen-ID
+      responses:
+        '200':
+          description: Klasse erfolgreich gelöscht
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  erfolg:
+                    type: boolean
+        '400':
+          description: ID fehlt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Keine Admin-Berechtigung oder DummyKlasse darf nicht gelöscht werden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Klasse existiert nicht
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /restapi.php?action=getUser:
+    get:
+      tags:
+        - User
+      summary: Benutzer-Daten abrufen
+      description: Gibt die Daten des eingeloggten Benutzers aus
+      responses:
+        '200':
+          description: Benutzer-Daten erfolgreich abgerufen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Nicht eingeloggt
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /restapi.php?action=writeUser:
+    post:
+      tags:
+        - User
+      summary: Neuen Benutzer registrieren
+      description: Registriert einen neuen Benutzer mit den erforderlichen Daten
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - passwort
+                - name
+                - vorname
+                - klassenname
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: E-Mail-Adresse des Benutzers
+                passwort:
+                  type: string
+                  format: password
+                  description: Passwort des Benutzers
+                name:
+                  type: string
+                  description: Nachname des Benutzers
+                vorname:
+                  type: string
+                  description: Vorname des Benutzers
+                klassenname:
+                  type: string
+                  description: Klasse des Benutzers
+      responses:
+        '200':
+          description: Benutzer erfolgreich registriert
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  benutzerAngelegt:
+                    type: boolean
+        '400':
+          description: Fehlende Registrierungsdaten
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  benutzerAngelegt:
+                    type: boolean
+                  grund:
+                    type: string
+
+  /restapi.php?action=profile:
+    get:
+      tags:
+        - User
+      summary: Profil des Benutzers abrufen
+      description: Holt die Profildaten und verfügbaren Klassen
+      responses:
+        '200':
+          description: Profildaten erfolgreich abgerufen
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  userData:
+                    $ref: '#/components/schemas/UserData'
+                  klassen:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Class'
+        '401':
+          description: Nicht authentifiziert
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+        '404':
+          description: Benutzer nicht gefunden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+
+  /restapi.php?action=updateProfile:
+    put:
+      tags:
+        - User
+      summary: Benutzer-Profil aktualisieren
+      description: Aktualisiert die Profildaten des Benutzers (Name, Vorname, E-Mail, Passwort, Klasse)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Nachname
+                vorname:
+                  type: string
+                  description: Vorname
+                email:
+                  type: string
+                  format: email
+                  description: E-Mail-Adresse
+                passwort:
+                  type: string
+                  format: password
+                  description: Neues Passwort (optional)
+                passwort_confirm:
+                  type: string
+                  format: password
+                  description: Passwort-Bestätigung (erforderlich, wenn passwort gesetzt)
+                klassen_id:
+                  type: integer
+                  description: ID der neuen Klasse (optional)
+      responses:
+        '200':
+          description: Profil erfolgreich aktualisiert
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  userData:
+                    $ref: '#/components/schemas/UserData'
+                  klassen:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Class'
+        '400':
+          description: Validierungsfehler
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+        '401':
+          description: Nicht authentifiziert
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+
+  /restapi.php?action=requestPasswordReset:
+    post:
+      tags:
+        - Password
+      summary: Passwort-Reset anfordern
+      description: Sendet einen Reset-Link an die E-Mail-Adresse des Benutzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: E-Mail-Adresse des Benutzers
+      responses:
+        '200':
+          description: Reset-Link wurde gesendet
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+        '400':
+          description: Ungültige E-Mail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: E-Mail nicht gefunden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /restapi.php?action=resetPassword:
+    post:
+      tags:
+        - Password
+      summary: Passwort zurücksetzen
+      description: Setzt das Passwort mit einem gültigen Reset-Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - password
+              properties:
+                token:
+                  type: string
+                  description: Der Reset-Token aus der E-Mail
+                password:
+                  type: string
+                  format: password
+                  description: Das neue Passwort
+      responses:
+        '200':
+          description: Passwort erfolgreich aktualisiert
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+        '400':
+          description: Ungültige Daten
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '401':
+          description: Token ungültig oder abgelaufen
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+components:
+  schemas:
+    CalendarEvent:
+      type: object
+      properties:
+        termin_id:
+          type: string
+          description: Eindeutige Kennung des Termins
+        summary:
+          type: string
+          description: Titel/Zusammenfassung des Termins
+        start:
+          type: string
+          format: date-time
+          description: Startzeit des Termins
+        end:
+          type: string
+          format: date-time
+          description: Endzeit des Termins
+        location:
+          type: string
+          description: Ort des Termins
+
+    ChangeRecord:
+      type: object
+      properties:
+        termin_id:
+          type: string
+          description: ID des geänderten Termins
+        label:
+          type: string
+          enum: [gelöscht, neu, geändert]
+          description: Art der Änderung
+        summary_alt:
+          type: string
+          description: Alter Titel (bei Änderung)
+        start_alt:
+          type: string
+          format: date-time
+          description: Alte Startzeit (bei Änderung)
+        end_alt:
+          type: string
+          format: date-time
+          description: Alte Endzeit (bei Änderung)
+        location_alt:
+          type: string
+          description: Alter Ort (bei Änderung)
+
+    NotedChange:
+      type: object
+      properties:
+        termin_id:
+          type: string
+          description: ID des gelesenen Termins
+
+    Class:
+      type: object
+      properties:
+        klassen_id:
+          type: integer
+          description: Eindeutige Kennung der Klasse
+        klassenname:
+          type: string
+          description: Name der Klasse
+
+    User:
+      type: object
+      properties:
+        benutzer_id:
+          type: string
+          description: Eindeutige Benutzer-ID
+        ist_admin:
+          type: integer
+          enum: [0, 1]
+          description: Admin-Status des Benutzers
+        name:
+          type: string
+          description: Nachname des Benutzers
+        vorname:
+          type: string
+          description: Vorname des Benutzers
+        email:
+          type: string
+          format: email
+          description: E-Mail-Adresse des Benutzers
+        klassenname:
+          type: string
+          description: Name der Klasse des Benutzers
+
+    UserData:
+      type: object
+      properties:
+        benutzer_id:
+          type: string
+          description: Eindeutige Benutzer-ID
+        name:
+          type: string
+          description: Nachname
+        vorname:
+          type: string
+          description: Vorname
+        email:
+          type: string
+          format: email
+          description: E-Mail-Adresse
+        klassen_id:
+          type: integer
+          description: ID der Klasse
+        klassenname:
+          type: string
+          description: Name der Klasse
+
+    Error:
+      type: object
+      properties:
+        erfolg:
+          type: boolean
+          example: false
+        grund:
+          type: string
+          description: Fehlermeldung
+
