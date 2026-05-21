@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
 
 imports:
-    - { resource: '../generated/Resources/config/services.yaml' }
+    - { resource: '../src/OpenApi/Resources/config/services.yaml' }
 
 # This file is the entry point to configure your own services.
 # Files in the packages/ subdirectory configure your dependencies.
@@ -21,3 +21,10 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+
+    # Register OpenAPI API Handlers
+    App\OpenApi\Api\UserApi:
+        tags:
+            - { name: 'open_api_server.api', api: 'user' }
+
+

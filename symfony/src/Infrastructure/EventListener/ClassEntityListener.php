@@ -12,8 +12,8 @@ use Doctrine\ORM\Events;
  * Event Listener für Klasse-Entity
  * Wird nach Persistierung aufgerufen um Kalender zu aktualisieren
  */
-#[AsEntityListener(event: Events::POST_PERSIST, entity: ClassEntity::class)]
-#[AsEntityListener(event: Events::POST_UPDATE, entity: ClassEntity::class)]
+#[AsEntityListener(event: 'postPersist', entity: ClassEntity::class)]
+#[AsEntityListener(event: 'postUpdate', entity: ClassEntity::class)]
 class ClassEntityListener
 {
     /**

@@ -11,7 +11,9 @@
 
 # Import generated OpenAPI routes
 openapi_server:
-    resource: '../generated/Resources/config/routing.yaml'
+    resource: '../src/OpenApi/Resources/config/routing.yaml'
 
 controllers:
     resource: routing.controllers
+
+

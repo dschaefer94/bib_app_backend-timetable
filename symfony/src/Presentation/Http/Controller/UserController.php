@@ -31,7 +31,7 @@ class UserController extends AbstractController
      * Aktuelle Benutzer-Daten abrufen
      */
     #[Route('/me', name: 'get_current', methods: ['GET'])]
-    public function getUser(): JsonResponse
+    public function getCurrentUser(): JsonResponse
     {
         try {
             $data = $this->userApplicationService->getUser();

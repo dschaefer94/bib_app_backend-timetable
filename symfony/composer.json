@@ -2,21 +2,41 @@
     "name": "symfony/skeleton",
     "type": "project",
     "license": "MIT",
-    "description": "A minimal Symfony project recommended to create bare bones applications",
+    "description": "API-first Symfony microservice using OpenAPI Generator",
     "minimum-stability": "stable",
     "prefer-stable": true,
+
     "require": {
         "php": ">=8.4",
         "ext-ctype": "*",
         "ext-iconv": "*",
+
+        "doctrine/doctrine-bundle": "^3.2.2",
+        "doctrine/orm": "^3.6.6",
+        "jms/serializer": ">=3.32.7",
         "symfony/console": "8.0.*",
         "symfony/dotenv": "8.0.*",
-        "symfony/flex": "^2",
+        "symfony/flex": "^2.10",
         "symfony/framework-bundle": "8.0.*",
+        "symfony/mailer": "8.0.*",
         "symfony/runtime": "8.0.*",
+        "symfony/security-bundle": "8.0.*",
         "symfony/validator": "8.0.*",
         "symfony/yaml": "8.0.*"
     },
+
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+
+    "autoload-dev": {
+        "psr-4": {
+            "App\\Tests\\": "tests/"
+        }
+    },
+
     "config": {
         "allow-plugins": {
             "php-http/discovery": true,
@@ -26,17 +46,7 @@
         "bump-after-update": true,
         "sort-packages": true
     },
-    "autoload": {
-        "psr-4": {
-            "App\\": "src/",
-            "OpenAPI\\Server\\": "generated/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "App\\Tests\\": "tests/"
-        }
-    },
+
     "replace": {
         "symfony/polyfill-ctype": "*",
         "symfony/polyfill-iconv": "*",
@@ -49,6 +59,7 @@
         "symfony/polyfill-php83": "*",
         "symfony/polyfill-php84": "*"
     },
+
     "scripts": {
         "auto-scripts": {
             "cache:clear": "symfony-cmd",
@@ -59,11 +70,15 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
-        ]
+        ],
+
+        "generate:openapi": "powershell -ExecutionPolicy Bypass -File generate.ps1"
     },
+
     "conflict": {
         "symfony/symfony": "*"
     },
+
     "extra": {
         "symfony": {
             "allow-contrib": false,

@@ -211,7 +211,7 @@ paths:
       description: Aktualisiert den Namen und/oder iCal-Link einer Klasse
       parameters:
         - name: id
-          in: query
+          in: path
           required: true
           schema:
             type: string
@@ -254,7 +254,7 @@ paths:
       description: Löscht eine Klasse und alle zugehörigen Daten (nur Admin)
       parameters:
         - name: id
-          in: query
+          in: path
           required: true
           schema:
             type: string
@@ -309,6 +309,64 @@ paths:
                 type: object
                 properties:
                   error:
+                    type: string
+
+  /api/users/register:
+    post:
+      tags:
+        - User
+      summary: Neuen Benutzer registrieren
+      description: Registriert einen neuen Benutzer mit den erforderlichen Daten
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - passwort
+                - name
+                - vorname
+                - klassenname
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: E-Mail-Adresse des Benutzers
+                passwort:
+                  type: string
+                  format: password
+                  description: Passwort des Benutzers
+                name:
+                  type: string
+                  description: Nachname des Benutzers
+                vorname:
+                  type: string
+                  description: Vorname des Benutzers
+                klassenname:
+                  type: string
+                  description: Klasse des Benutzers
+      responses:
+        '200':
+          description: Benutzer erfolgreich registriert
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  benutzerAngelegt:
+                    type: boolean
+        '400':
+          description: Fehlende Registrierungsdaten
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  benutzerAngelegt:
+                    type: boolean
+                  grund:
                     type: string
 
   /restapi.php?action=writeUser:
