@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PhpIncludePathManager">
+    <include_path>
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/dotenv" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/polyfill-mbstring" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/validator" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/service-contracts" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/string" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/yaml" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/http-foundation" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/framework-bundle" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/http-kernel" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/translation-contracts" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/lexer" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/deprecations" />
+      <path value="$PROJECT_DIR$/timetable/vendor/composer" />
+      <path value="$PROJECT_DIR$/timetable/vendor/jms/serializer-bundle" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/inflector" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/migrations" />
+      <path value="$PROJECT_DIR$/timetable/vendor/jms/metadata" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/doctrine-migrations-bundle" />
+      <path value="$PROJECT_DIR$/timetable/vendor/jms/serializer" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/collections" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/doctrine-bundle" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/persistence" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/sql-formatter" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/event-manager" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/instantiator" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/dbal" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/orm" />
+      <path value="$PROJECT_DIR$/timetable/vendor/psr/log" />
+      <path value="$PROJECT_DIR$/timetable/vendor/psr/container" />
+      <path value="$PROJECT_DIR$/timetable/vendor/psr/event-dispatcher" />
+      <path value="$PROJECT_DIR$/timetable/vendor/psr/cache" />
+      <path value="$PROJECT_DIR$/timetable/vendor/phpstan/phpdoc-parser" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/runtime" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/routing" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/finder" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/deprecation-contracts" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/cache-contracts" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/flex" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/polyfill-php85" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/event-dispatcher" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/var-dumper" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/error-handler" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/event-dispatcher-contracts" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/console" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/stopwatch" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/cache" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/dependency-injection" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/config" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/filesystem" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/var-exporter" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/polyfill-intl-normalizer" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/polyfill-intl-grapheme" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/doctrine-bridge" />
+    </include_path>
+  </component>
+  <component name="PhpProjectSharedConfiguration" php_language_level="8.4" />
+</project>

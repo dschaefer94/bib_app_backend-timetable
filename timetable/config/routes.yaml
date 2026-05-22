@@ -1,0 +1,10 @@
+# Die Routen werden vom generierten Bundle bereitgestellt.
+# Da wir API-First arbeiten, binden wir die generierten Routen hier ein.
+
+controllers:
+    resource: ../src/Controller/
+    type: attribute
+
+openapi_controllers:
+    resource: ../src/OpenApi/Controller/
+    type: attribute

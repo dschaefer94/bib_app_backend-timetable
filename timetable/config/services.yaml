@@ -1,0 +1,31 @@
+parameters:
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    # Aliase für OpenAPI Services, damit Autowiring funktioniert
+    App\OpenApi\Api\ApiServer: '@open_api_server.api.api_server'
+    App\OpenApi\Service\SerializerInterface: '@open_api_server.service.serializer'
+    App\OpenApi\Service\ValidatorInterface: '@open_api_server.service.validator'
+
+    # OpenAPI Handler für /api/calendar
+    App\Api\CalendarApiService:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+        tags:
+            - { name: 'open_api_server.api', api: 'calendar' }
+
+    # OpenAPI Generator Controller als echte Symfony Controller registrieren
+    App\OpenApi\Controller\:
+        resource: '../src/OpenApi/Controller'
+        tags: ['controller.service_arguments']
+        public: true

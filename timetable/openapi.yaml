@@ -1,0 +1,160 @@
+openapi: 3.0.0
+
+info:
+    title: Bib-App Calendar API
+    description: Symfony-konforme REST API für Stundenplan und Terminverwaltung
+    version: 2.0.0
+    contact:
+        name: Daniel Schäfer
+
+servers:
+    - url: http://localhost:8000
+      description: Symfony Development Server
+    - url: http://localhost
+      description: Production Server
+
+tags:
+    - name: Calendar
+      description: Stundenplan und Terminverwaltung
+
+paths:
+    /api/calendar:
+        get:
+            tags:
+                - Calendar
+            summary: Aktuellen Stundenplan abrufen
+            description: |
+                Holt den aktuellen Stundenplan für die Klasse des Benutzers.
+                Die Authentifizierung und Kontextauflösung erfolgt in einer späteren Version.
+                Alle Termine sind mit optionalen Metadaten (Label, Kategorie, Originaltermin) angereichert.
+            operationId: getCalendar
+            responses:
+                '200':
+                    description: Stundenplan erfolgreich abgerufen
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                required:
+                                    - success
+                                    - data
+                                    - timestamp
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    data:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/CalendarEvent'
+                                    timestamp:
+                                        type: string
+                                        format: date-time
+                                        description: Zeitpunkt der Erstellung der Antwort
+                                        example: "2026-05-22T12:00:00+02:00"
+
+                default:
+                    description: Fachlicher oder technischer Fehler
+                    content:
+                        application/problem+json:
+                            schema:
+                                $ref: '#/components/schemas/Problem'
+
+components:
+    schemas:
+
+        CalendarEvent:
+            type: object
+            description: Termin des Stundenplans mit optionalen Metadaten
+            required:
+                - id
+                - summary
+                - start
+                - end
+            properties:
+                id:
+                    type: string
+                    format: uuid
+                    example: "550e8400-e29b-41d4-a716-446655440000"
+
+                summary:
+                    type: string
+                    maxLength: 255
+                    example: "Mathematik - Unterricht"
+
+                description:
+                    type: string
+                    nullable: true
+                    example: "Lektion zu Differentialrechnung"
+
+                start:
+                    type: string
+                    format: date-time
+                    example: "2026-05-22T09:00:00+02:00"
+
+                end:
+                    type: string
+                    format: date-time
+                    example: "2026-05-22T10:00:00+02:00"
+
+                location:
+                    type: string
+                    nullable: true
+                    example: "Raum 101"
+
+                label:
+                    type: string
+                    nullable: true
+                    enum: [neu, gelöscht, geändert]
+
+                kategorie:
+                    type: string
+                    nullable: true
+                    enum: [klausur, bib-event, eigenes-event]
+
+                originalEvent:
+                    type: object
+                    nullable: true
+                    required: [summary, start, end]
+                    properties:
+                        summary:
+                            type: string
+                        start:
+                            type: string
+                            format: date-time
+                        end:
+                            type: string
+                            format: date-time
+                        location:
+                            type: string
+                            nullable: true
+
+                updatedAt:
+                    type: string
+                    format: date-time
+                    nullable: true
+
+        Problem:
+            type: object
+            description: RFC-9457-kompatibles Problem-Detail-Objekt
+            properties:
+                type:
+                    type: string
+                    format: uri-reference
+                    default: 'about:blank'
+                    example: '/problems/calendar-not-found'
+                title:
+                    type: string
+                    example: 'Calendar not found'
+                status:
+                    type: integer
+                    format: int32
+                    minimum: 100
+                    maximum: 599
+                detail:
+                    type: string
+                    example: 'No calendar could be resolved for the current user context.'
+                instance:
+                    type: string
+                    format: uri-reference
+                    example: '/api/calendar#missing-context'
