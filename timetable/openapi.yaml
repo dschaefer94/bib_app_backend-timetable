@@ -8,9 +8,9 @@ info:
         name: Daniel Schäfer
 
 servers:
-    - url: http://localhost:8000
+    - url: http://127.0.0.1:8000
       description: Symfony Development Server
-    - url: http://localhost
+    - url: http://127.0.0.1:8000
       description: Production Server
 
 tags:
