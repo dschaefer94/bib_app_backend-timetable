@@ -1,6 +1,9 @@
 doctrine:
     dbal:
         url: '%env(resolve:DATABASE_URL)%'
+        types:
+            aenderungs_label: App\DBAL\Types\AenderungsLabelEnumType
+            kalender_kategorie: App\DBAL\Types\KalenderKategorieEnumType
     orm:
         validate_xml_mapping: false
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware

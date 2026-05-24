@@ -55,7 +55,29 @@
       <path value="$PROJECT_DIR$/timetable/vendor/symfony/polyfill-intl-normalizer" />
       <path value="$PROJECT_DIR$/timetable/vendor/symfony/polyfill-intl-grapheme" />
       <path value="$PROJECT_DIR$/timetable/vendor/symfony/doctrine-bridge" />
+      <path value="$PROJECT_DIR$/timetable/vendor/nikic/php-parser" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/maker-bundle" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/process" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/uid" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/polyfill-uuid" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/password-hasher" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/type-info" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/security-bundle" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/security-http" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/property-access" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/property-info" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/security-csrf" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/clock" />
+      <path value="$PROJECT_DIR$/timetable/vendor/symfony/security-core" />
+      <path value="$PROJECT_DIR$/timetable/vendor/psr/clock" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/data-fixtures" />
+      <path value="$PROJECT_DIR$/timetable/vendor/doctrine/doctrine-fixtures-bundle" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.4" />
+  <component name="PhpUnit">
+    <phpunit_settings>
+      <PhpUnitSettings custom_loader_path="$PROJECT_DIR$/timetable/vendor/autoload.php" />
+    </phpunit_settings>
+  </component>
 </project>
