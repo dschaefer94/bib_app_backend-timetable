@@ -9,14 +9,15 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ENUMS
 -- =========================================================
 
-DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'aenderungs_label') THEN
-        CREATE TYPE aenderungs_label AS ENUM ('gelöscht', 'neu', 'geändert');
-    END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'kalender_kategorie') THEN
-        CREATE TYPE kalender_kategorie AS ENUM ('klausur', 'bib-event', 'eigenes-event', 'unterricht', 'projekt', 'ferien', 'prüfung');
-    END IF;
-END $$;
+-- Temporarily commented out to avoid conflicts with Doctrine Migrations
+-- DO $$ BEGIN
+--     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'aenderungs_label') THEN
+--         CREATE TYPE aenderungs_label AS ENUM ('gelöscht', 'neu', 'geändert');
+--     END IF;
+--     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'kalender_kategorie') THEN
+--         CREATE TYPE kalender_kategorie AS ENUM ('klausur', 'bib-event', 'eigenes-event', 'unterricht', 'projekt', 'ferien', 'prüfung');
+--     END IF;
+-- END $$;
 
 -- =========================================================
 -- WEEK HELPERS

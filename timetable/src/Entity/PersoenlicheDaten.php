@@ -16,7 +16,7 @@ class PersoenlicheDaten
     #[ORM\CustomIdGenerator(class: "Symfony\\Bridge\\Doctrine\\IdGenerator\\UuidGenerator")]
     private ?Uuid $id = null;
 
-    #[ORM\OneToOne(targetEntity: Benutzer::class, inversedBy: 'persoenlicheDaten', cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(targetEntity: Benutzer::class, inversedBy: 'persoenlicheDaten')] // 'cascade' entfernt
     #[ORM\JoinColumn(name: "benutzer_id", referencedColumnName: "id", nullable: false)]
     private ?Benutzer $benutzer = null;
 

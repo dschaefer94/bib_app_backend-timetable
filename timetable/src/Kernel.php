@@ -3,8 +3,8 @@
 namespace App;
 
 use Doctrine\DBAL\Types\Type;
-use App\DBAL\Types\AenderungsLabelEnumType;
-use App\DBAL\Types\KalenderKategorieEnumType;
+// use App\DBAL\Types\AenderungsLabelEnumType; // Entfernt
+// use App\DBAL\Types\KalenderKategorieEnumType; // Entfernt
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 
@@ -17,11 +17,11 @@ class Kernel extends BaseKernel
         parent::boot();
 
         // Registriere benutzerdefinierte DBAL-Typen, falls noch nicht geschehen
-        if (!Type::hasType(AenderungsLabelEnumType::NAME)) {
-            Type::addType(AenderungsLabelEnumType::NAME, AenderungsLabelEnumType::class);
-        }
-        if (!Type::hasType(KalenderKategorieEnumType::NAME)) {
-            Type::addType(KalenderKategorieEnumType::NAME, KalenderKategorieEnumType::class);
-        }
+        // if (!Type::hasType(AenderungsLabelEnumType::NAME)) { // Entfernt
+        //     Type::addType(AenderungsLabelEnumType::NAME, AenderungsLabelEnumType::class); // Entfernt
+        // }
+        // if (!Type::hasType(KalenderKategorieEnumType::NAME)) { // Entfernt
+        //     Type::addType(KalenderKategorieEnumType::NAME, KalenderKategorieEnumType::class); // Entfernt
+        // }
     }
 }

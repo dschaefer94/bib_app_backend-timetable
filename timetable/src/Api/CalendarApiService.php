@@ -58,8 +58,8 @@ class CalendarApiService implements CalendarApiInterface
             $event->setId((string) $entry->getId());
             $event->setSummary($entry->getSummary());
             $event->setDescription($entry->getDescription());
-            $event->setStart($entry->getStart());
-            $event->setEnd($entry->getEnd());
+            $event->setStart(\DateTime::createFromImmutable($entry->getStart())); // Konvertiert zu DateTime
+            $event->setEnd(\DateTime::createFromImmutable($entry->getEnd()));     // Konvertiert zu DateTime
             $event->setLocation($entry->getLocation());
             $event->setLabel($entry->getLabel());
             $event->setKategorie($entry->getKategorie());

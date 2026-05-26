@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
-use App\DBAL\Types\AenderungsLabelEnumType; // Importiere den neuen Typ
+// use App\DBAL\Types\AenderungsLabelEnumType; // Import entfernt
 
 #[ORM\Entity(repositoryClass: GeaenderteTermineRepository::class)]
 #[ORM\Table(name: "geaenderte_termine")]
@@ -46,8 +46,9 @@ class GeaenderteTermine
     #[ORM\Column(type: "string", length: 255)]
     private string $klasse; // Foreign Key für die Klasse
 
-    #[ORM\Column(type: AenderungsLabelEnumType::NAME, length: 50)] // Typ geändert
-    private string $changeType; // z.B. 'added', 'modified', 'deleted'
+    #[ORM\ManyToOne(targetEntity: AenderungsLabel::class)] // Neue ManyToOne-Beziehung
+    #[ORM\JoinColumn(nullable: false)] // changeType ist immer erforderlich
+    private AenderungsLabel $changeType; // Typ geändert
 
     public function getId(): ?Uuid
     {
@@ -164,12 +165,12 @@ class GeaenderteTermine
         return $this;
     }
 
-    public function getChangeType(): string
+    public function getChangeType(): AenderungsLabel
     {
         return $this->changeType;
     }
 
-    public function setChangeType(string $changeType): self
+    public function setChangeType(AenderungsLabel $changeType): self
     {
         $this->changeType = $changeType;
         return $this;

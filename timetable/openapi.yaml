@@ -134,6 +134,16 @@ components:
                     format: date-time
                     nullable: true
 
+                changeType: # Neues Feld hinzugefügt
+                    type: integer
+                    nullable: true
+                    description: |
+                        Der Typ der Änderung, falls es sich um einen geänderten Termin handelt.
+                        1: gelöscht
+                        2: neu
+                        3: geändert
+                    example: 1
+
         Problem:
             type: object
             description: RFC-9457-kompatibles Problem-Detail-Objekt

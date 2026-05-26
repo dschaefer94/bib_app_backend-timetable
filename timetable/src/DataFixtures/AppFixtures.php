@@ -5,11 +5,12 @@ namespace App\DataFixtures;
 use App\Entity\Benutzer;
 use App\Entity\CalendarSource;
 use App\Entity\PersoenlicheDaten;
-use App\Entity\StundenplanNeu; // Importiere StundenplanNeu
+use App\Entity\StundenplanNeu;
+use App\Entity\AenderungsLabel; // Importiere die neue Entität
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Uid\Uuid; // Uuid wird weiterhin für andere Zwecke benötigt, z.B. für Benutzer-ID, falls manuell gesetzt
+use Symfony\Component\Uid\Uuid;
 
 class AppFixtures extends Fixture
 {
@@ -34,70 +35,77 @@ class AppFixtures extends Fixture
 
         // Persönliche Daten für Dummyuser erstellen
         $persoenlicheDaten = new PersoenlicheDaten();
-        $persoenlicheDaten->setBenutzer($dummyUser);
+        $persoenlicheDaten->setBenutzer($dummyUser); // Setzt die owning side
         $persoenlicheDaten->setName('Mustermann');
         $persoenlicheDaten->setVorname('Max');
         $persoenlicheDaten->setKlasse($dummyKlasse);
         $manager->persist($persoenlicheDaten);
 
+        // WICHTIG: Setze die inverse Seite der OneToOne-Beziehung
+        $dummyUser->setPersoenlicheDaten($persoenlicheDaten);
+        // Doctrine wird dies beim flush erkennen und die Beziehung korrekt speichern.
+
+        // --- AenderungsLabel Entitäten erstellen ---
+        $aenderungsLabels = [];
+        foreach (['gelöscht', 'neu', 'geändert'] as $labelName) {
+            $aenderungsLabel = new AenderungsLabel();
+            $aenderungsLabel->setName($labelName);
+            $manager->persist($aenderungsLabel);
+            $aenderungsLabels[$labelName] = $aenderungsLabel;
+        }
+
         // --- Zusätzliche Testtermine für StundenplanNeu ---
         $klasseName = $dummyKlasse->getClassName();
 
-        // Labels und Kategorien aus den ENUM-Definitionen
-        $labels = ['gelöscht', 'neu', 'geändert'];
+        // Kategorien (bleiben Strings für StundenplanNeu)
         $kategorien = ['klausur', 'bib-event', 'eigenes-event', 'unterricht', 'projekt', 'ferien', 'prüfung'];
 
         // Start der aktuellen Woche (Montag) berechnen
         $now = new \DateTimeImmutable();
-        // Finde den letzten Montag (oder heute, wenn heute Montag ist)
         $startOfWeek = $now->modify('last monday');
-        // Wenn heute Sonntag ist, wäre 'last monday' vor 7 Tagen. Wir wollen den Montag dieser Woche.
-        if ($now->format('N') == 7) { // Sonntag ist 7
+        if ($now->format('N') == 7) {
             $startOfWeek = $now->modify('monday this week');
         }
-        // Wenn heute Montag ist, ist 'last monday' heute.
-        // Wenn heute Dienstag-Samstag ist, ist 'last monday' der Montag dieser Woche.
 
-        $dayOffset = 0; // Start am Montag
+        $dayOffset = 0;
 
-        // Termine für jede Kategorie
+        // Termine für jede Kategorie (StundenplanNeu)
         foreach ($kategorien as $kategorie) {
             $event = new StundenplanNeu();
-            // $event->setId(Uuid::v4()); // ENTFERNT: ID wird automatisch generiert
             $event->setSummary("Termin: " . ucfirst($kategorie));
             $event->setDescription("Beschreibung für " . $kategorie . " in der Dummyklasse.");
             $event->setStart($startOfWeek->modify('+' . $dayOffset . ' days')->setTime(9, 0, 0));
             $event->setEnd($startOfWeek->modify('+' . $dayOffset . ' days')->setTime(10, 0, 0));
             $event->setLocation("Raum " . (100 + $dayOffset));
-            $event->setKategorie($kategorie);
+            $event->setKategorie($kategorie); // Kategorie bleibt String
             $event->setKlasse($klasseName);
             $manager->persist($event);
 
             $dayOffset++;
-            if ($dayOffset > 4) { // Nur Montag bis Freitag
+            if ($dayOffset > 4) {
                 $dayOffset = 0;
-                $startOfWeek = $startOfWeek->modify('+1 week'); // Nächste Woche, falls mehr als 5 Kategorien
+                $startOfWeek = $startOfWeek->modify('+1 week');
             }
         }
 
-        // Termine für jedes Label (verwenden wir andere Tage oder Zeiten, um Kollisionen zu vermeiden)
-        $dayOffset = 0; // Reset für Labels
-        foreach ($labels as $label) {
+        // Termine für jedes Label (StundenplanNeu) - hier wird weiterhin der String-Label gesetzt
+        // Wenn GeaenderteTermine hier erstellt würden, würden wir $aenderungsLabels verwenden
+        $dayOffset = 0;
+        foreach (['gelöscht', 'neu', 'geändert'] as $label) { // Labels bleiben Strings für StundenplanNeu
             $event = new StundenplanNeu();
-            // $event->setId(Uuid::v4()); // ENTFERNT: ID wird automatisch generiert
             $event->setSummary("Label: " . ucfirst($label));
             $event->setDescription("Beschreibung für Label " . $label . " in der Dummyklasse.");
-            $event->setStart($startOfWeek->modify('+' . $dayOffset . ' days')->setTime(11, 0, 0)); // Andere Uhrzeit
+            $event->setStart($startOfWeek->modify('+' . $dayOffset . ' days')->setTime(11, 0, 0));
             $event->setEnd($startOfWeek->modify('+' . $dayOffset . ' days')->setTime(12, 0, 0));
             $event->setLocation("Labor " . (200 + $dayOffset));
-            $event->setLabel($label);
+            $event->setLabel($label); // Label bleibt String
             $event->setKlasse($klasseName);
             $manager->persist($event);
 
             $dayOffset++;
-            if ($dayOffset > 4) { // Nur Montag bis Freitag
+            if ($dayOffset > 4) {
                 $dayOffset = 0;
-                $startOfWeek = $startOfWeek->modify('+1 week'); // Nächste Woche
+                $startOfWeek = $startOfWeek->modify('+1 week');
             }
         }
 

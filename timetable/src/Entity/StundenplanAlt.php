@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
-use App\DBAL\Types\KalenderKategorieEnumType; // Importiere den neuen Typ
+// use App\DBAL\Types\KalenderKategorieEnumType; // Import entfernt
 
 #[ORM\Entity(repositoryClass: StundenplanAltRepository::class)]
 #[ORM\Table(name: "stundenplan_alt")]
@@ -34,7 +34,7 @@ class StundenplanAlt
     #[ORM\Column(type: "string", length: 50, nullable: true)]
     private ?string $label = null;
 
-    #[ORM\Column(type: KalenderKategorieEnumType::NAME, nullable: true)] // Typ geändert
+    #[ORM\Column(type: "string", length: 50, nullable: true)] // Typ geändert
     private ?string $kategorie = null;
 
     #[ORM\Column(type: "json", nullable: true)]

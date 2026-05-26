@@ -1,13 +1,14 @@
 doctrine:
     dbal:
         url: '%env(resolve:DATABASE_URL)%'
+        server_version: '16' # Explizit die Server-Version setzen
         types:
-            aenderungs_label: App\DBAL\Types\AenderungsLabelEnumType
-            kalender_kategorie: App\DBAL\Types\KalenderKategorieEnumType
+            # aenderungs_label: App\DBAL\Types\AenderungsLabelEnumType # Entfernt
+            # kalender_kategorie: App\DBAL\Types\KalenderKategorieEnumType # Entfernt
     orm:
         validate_xml_mapping: false
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
-        auto_mapping: true
+        auto_mapping: false
         mappings:
             App:
                 is_bundle: false

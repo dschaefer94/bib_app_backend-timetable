@@ -30,6 +30,9 @@ class Benutzer implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: "json")]
     private array $roles = [];
 
+    #[ORM\OneToOne(mappedBy: 'benutzer', targetEntity: PersoenlicheDaten::class)] // 'cascade' entfernt
+    private ?PersoenlicheDaten $persoenlicheDaten = null;
+
     public function getId(): ?Uuid
     {
         return $this->id;
@@ -107,6 +110,28 @@ class Benutzer implements UserInterface, PasswordAuthenticatedUserInterface
     public function setIsAdmin(bool $istadmin): self
     {
         $this->istadmin = $istadmin;
+        return $this;
+    }
+
+    public function getPersoenlicheDaten(): ?PersoenlicheDaten
+    {
+        return $this->persoenlicheDaten;
+    }
+
+    public function setPersoenlicheDaten(?PersoenlicheDaten $persoenlicheDaten): self
+    {
+        // unset the owning side of the relation if necessary
+        if (null === $persoenlicheDaten && null !== $this->persoenlicheDaten) {
+            $this->persoenlicheDaten->setBenutzer(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if (null !== $persoenlicheDaten && $persoenlicheDaten->getBenutzer() !== $this) {
+            $persoenlicheDaten->setBenutzer($this);
+        }
+
+        $this->persoenlicheDaten = $persoenlicheDaten;
+
         return $this;
     }
 }

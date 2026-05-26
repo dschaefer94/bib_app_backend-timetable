@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- https://phpunit.readthedocs.io/en/latest/configuration.html -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.0/phpunit.xsd"
+         backupGlobals="false"
+         colors="true"
+         bootstrap="tests/bootstrap.php"
+         cacheDirectory=".phpunit.cache"
+         displayDetailsOnIncompleteTests="true"
+         displayDetailsOnSkippedTests="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerErrors="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
+>
+    <php>
+        <ini name="display_errors" value="1" />
+        <ini name="error_reporting" value="-1" />
+        <server name="APP_ENV" value="test" force="true" /> <!-- GEÄNDERT: Wieder auf test gesetzt -->
+        <server name="APP_DEBUG" value="1" force="true" /> <!-- GEÄNDERT: Wieder auf 1 gesetzt -->
+        <server name="SHELL_VERBOSITY" value="-1" />
+        <server name="SYMFONY_PHPUNIT_REMOVE" value="" />
+        <!-- <server name="SYMFONY_PHPUNIT_VERSION" value="9.5" /> --> <!-- Entfernt -->
+        <!-- Define your test database URL here -->
+        <env name="DATABASE_URL" value="postgresql://symfony:!ChangeMe!@127.0.0.1:5432/pbd2h24asc_stundenplan_test_db?charset=utf8" />
+        <env name="KERNEL_CLASS" value="App\Kernel" />
+    </php>
+
+    <testsuites>
+        <testsuite name="Project Test Suite">
+            <directory>tests/</directory>
+        </testsuite>
+    </testsuites>
+
+    <source> <!-- Geändert von <coverage processUncoveredFiles="true"> -->
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+    </source> <!-- Geändert von </coverage> -->
+
+    <!-- <extensions> --> <!-- Temporär entfernt -->
+        <!-- <extension class="Symfony\Bridge\PhpUnit\SymfonyTestsListener"> -->
+            <!-- <arguments> -->
+                <!-- <array> -->
+                    <!-- <element key="bootstrap"> -->
+                        <!-- <string>tests/bootstrap.php</string> -->
+                    <!-- </element> -->
+                    <!-- <element key="env"> -->
+                        <!-- <string>test</string> -->
+                    <!-- </element> -->
+                    <!-- <element key="debug"> -->
+                        <!-- <boolean>true</boolean> -->
+                    <!-- </element> -->
+                <!-- </array> -->
+            <!-- </arguments> -->
+        <!-- </extension> -->
+    <!-- </extensions> -->
+</phpunit>
