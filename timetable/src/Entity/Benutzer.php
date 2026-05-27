@@ -4,13 +4,12 @@ namespace App\Entity;
 
 use App\Repository\BenutzerRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: BenutzerRepository::class)]
 #[ORM\Table(name: "benutzer")]
-class Benutzer implements UserInterface, PasswordAuthenticatedUserInterface
+class Benutzer implements UserInterface
 {
     #[ORM\Id]
     #[ORM\Column(type: "uuid", unique: true)]
@@ -18,8 +17,8 @@ class Benutzer implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\CustomIdGenerator(class: "Symfony\\Bridge\\Doctrine\\IdGenerator\\UuidGenerator")]
     private ?Uuid $id = null;
 
-    #[ORM\Column(type: "string", length: 255)]
-    private string $passwort;
+    #[ORM\Column(type: "string", length: 255, unique: true)]
+    private string $identityId; // Dies ist die 'sub' ID von Keycloak/Cognito
 
     #[ORM\Column(type: "string", length: 255, unique: true)]
     private string $email;
@@ -54,7 +53,7 @@ class Benutzer implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        return (string) $this->identityId;
     }
 
     /**
@@ -76,20 +75,6 @@ class Benutzer implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRoles(array $roles): self
     {
         $this->roles = $roles;
-        return $this;
-    }
-
-    /**
-     * @see PasswordAuthenticatedUserInterface
-     */
-    public function getPassword(): string
-    {
-        return $this->passwort;
-    }
-
-    public function setPassword(string $passwort): self
-    {
-        $this->passwort = $passwort;
         return $this;
     }
 

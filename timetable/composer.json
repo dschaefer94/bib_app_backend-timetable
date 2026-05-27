@@ -4,22 +4,23 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
-        "php": ">=8.4",
+        "php": ">=8.2",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "doctrine/doctrine-bundle": "^3.2.2",
         "doctrine/doctrine-migrations-bundle": "^4.0",
-        "doctrine/orm": "^3.6.6",
+        "doctrine/orm": "^3.6.7",
         "jms/serializer-bundle": ">=5.5.2",
-        "symfony/console": "8.0.*",
-        "symfony/dotenv": "8.0.*",
+        "lexik/jwt-authentication-bundle": "^3.2",
+        "symfony/console": "^7.4.13",
+        "symfony/dotenv": "^7.4.11",
         "symfony/flex": "^2.10",
-        "symfony/framework-bundle": "8.0.*",
-        "symfony/runtime": "8.0.*",
-        "symfony/security-bundle": "8.0.*",
-        "symfony/uid": "8.0.*",
-        "symfony/validator": "8.0.*",
-        "symfony/yaml": "8.0.*"
+        "symfony/framework-bundle": "^7.4.13",
+        "symfony/runtime": "^7.4.13",
+        "symfony/security-bundle": "^7.4.13",
+        "symfony/uid": "^7.4.9",
+        "symfony/validator": "^7.4.10",
+        "symfony/yaml": "^7.4.13"
     },
     "config": {
         "allow-plugins": {
@@ -28,7 +29,10 @@
             "symfony/runtime": true
         },
         "bump-after-update": true,
-        "sort-packages": true
+        "sort-packages": true,
+        "audit": {
+            "block-insecure": false
+        }
     },
     "autoload": {
         "psr-4": {
@@ -70,14 +74,14 @@
     "extra": {
         "symfony": {
             "allow-contrib": false,
-            "require": "8.0.*"
+            "require": "^7.0"
         }
     },
     "require-dev": {
-        "doctrine/doctrine-fixtures-bundle": "^4.3",
-        "phpunit/phpunit": "^13.1",
-        "symfony/browser-kit": "8.0.*",
-        "symfony/css-selector": "8.0.*",
+        "doctrine/doctrine-fixtures-bundle": "^4.3.1",
+        "phpunit/phpunit": "^13.1.13",
+        "symfony/browser-kit": "^7.4.8",
+        "symfony/css-selector": "^7.4.9",
         "symfony/maker-bundle": "^1.67"
     }
 }

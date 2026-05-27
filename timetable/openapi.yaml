@@ -13,9 +13,15 @@ servers:
     - url: http://127.0.0.1:8000
       description: Production Server
 
+# Globale Sicherheitseinstellung: Alle Endpunkte erfordern BearerAuth (JWT)
+security:
+    - BearerAuth: []
+
 tags:
     - name: Calendar
       description: Stundenplan und Terminverwaltung
+    - name: User Profile
+      description: Verwaltung von Benutzerprofilen
 
 paths:
     /api/calendar:
@@ -60,9 +66,94 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/Problem'
 
-components:
-    schemas:
+    /api/profile/me:
+        get:
+            tags:
+                - User Profile
+            summary: Aktuelles Benutzerprofil abrufen
+            description: Ruft die Profildaten des authentifizierten Benutzers ab.
+            operationId: getUserProfile
+            responses:
+                '200':
+                    description: Benutzerprofil erfolgreich abgerufen
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UserProfile'
+                '401':
+                    description: Nicht authentifiziert
+                    content:
+                        application/problem+json:
+                            schema:
+                                $ref: '#/components/schemas/Problem'
+                default:
+                    description: Fachlicher oder technischer Fehler
+                    content:
+                        application/problem+json:
+                            schema:
+                                $ref: '#/components/schemas/Problem'
 
+    /api/profile/update-klasse:
+        post:
+            tags:
+                - User Profile
+            summary: Klasse des Benutzers aktualisieren
+            description: Aktualisiert die zugewiesene Klasse für den authentifizierten Benutzer.
+            operationId: updateKlasse
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateKlasseRequest'
+            responses:
+                '200':
+                    description: Klasse erfolgreich aktualisiert
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: "Klasse updated successfully."
+                                    klasse_id:
+                                        type: integer
+                                        example: 1
+                '400':
+                    description: Ungültige Anfrage (z.B. fehlende klassen_id)
+                    content:
+                        application/problem+json:
+                            schema:
+                                $ref: '#/components/schemas/Problem'
+                '401':
+                    description: Nicht authentifiziert
+                    content:
+                        application/problem+json:
+                            schema:
+                                $ref: '#/components/schemas/Problem'
+                '404':
+                    description: Klasse nicht gefunden
+                    content:
+                        application/problem+json:
+                            schema:
+                                $ref: '#/components/schemas/Problem'
+                default:
+                    description: Fachlicher oder technischer Fehler
+                    content:
+                        application/problem+json:
+                            schema:
+                                $ref: '#/components/schemas/Problem'
+
+components:
+    securitySchemes:
+        BearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+            description: JWT-Authentifizierung mit Bearer Token
+
+    schemas:
         CalendarEvent:
             type: object
             description: Termin des Stundenplans mit optionalen Metadaten
@@ -168,3 +259,47 @@ components:
                     type: string
                     format: uri-reference
                     example: '/api/calendar#missing-context'
+
+        UserProfile:
+            type: object
+            description: Benutzerprofil-Daten
+            properties:
+                identity_id:
+                    type: string
+                    format: uuid
+                    example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                    description: Die eindeutige ID des Benutzers vom Identity Provider (sub claim).
+                email:
+                    type: string
+                    format: email
+                    example: "user@example.com"
+                is_admin:
+                    type: boolean
+                    example: false
+                roles:
+                    type: array
+                    items:
+                        type: string
+                    example: ["ROLE_USER"]
+                klasse:
+                    $ref: '#/components/schemas/Klasse'
+
+        UpdateKlasseRequest:
+            type: object
+            required:
+                - klassen_id
+            properties:
+                klassen_id:
+                    type: integer
+                    example: 1
+                    description: Die ID der Klasse, die dem Benutzer zugewiesen werden soll.
+
+        Klasse:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 1
+                name:
+                    type: string
+                    example: "INF2023"

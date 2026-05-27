@@ -70,6 +70,9 @@ class CalendarController extends Controller
         }
 
         // Handle authentication
+        // Authentication 'BearerAuth' required
+        // HTTP bearer authentication required
+        $securityBearerAuth = $request->headers->get('authorization');
 
         // Read out all input parameter values into variables
 
@@ -81,6 +84,8 @@ class CalendarController extends Controller
         try {
             $handler = $this->getApiHandler();
 
+            // Set authentication method 'BearerAuth'
+            $handler->setBearerAuth($securityBearerAuth);
 
             // Make the call to the business logic
             $responseCode = 200;

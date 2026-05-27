@@ -1,6 +1,6 @@
 <?php
 /**
- * CalendarApiInterface
+ * UserProfileApiInterface
  *
  * PHP version 8.1.1
  *
@@ -30,18 +30,20 @@
 namespace App\OpenApi\Api;
 
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use App\OpenApi\Model\GetCalendar200Response;
 use App\OpenApi\Model\Problem;
+use App\OpenApi\Model\UpdateKlasse200Response;
+use App\OpenApi\Model\UpdateKlasseRequest;
+use App\OpenApi\Model\UserProfile;
 
 /**
- * CalendarApiInterface Interface Doc Comment
+ * UserProfileApiInterface Interface Doc Comment
  *
  * @category Interface
  * @package  App\OpenApi\Api
  * @author   OpenAPI Generator team
  * @link     https://github.com/openapitools/openapi-generator
  */
-interface CalendarApiInterface
+interface UserProfileApiInterface
 {
 
     /**
@@ -54,16 +56,33 @@ interface CalendarApiInterface
     public function setBearerAuth(?string $value): void;
 
     /**
-     * Operation getCalendar
+     * Operation getUserProfile
      *
-     * Aktuellen Stundenplan abrufen
+     * Aktuelles Benutzerprofil abrufen
      *
      * @param  int     &$responseCode    The HTTP Response Code
      * @param  array   $responseHeaders  Additional HTTP headers to return with the response ()
      *
      * @return array|object|null
      */
-    public function getCalendar(
+    public function getUserProfile(
+        int &$responseCode,
+        array &$responseHeaders
+    ): array|object|null;
+
+    /**
+     * Operation updateKlasse
+     *
+     * Klasse des Benutzers aktualisieren
+     *
+     * @param  UpdateKlasseRequest $updateKlasseRequest   (required)
+     * @param  int     &$responseCode    The HTTP Response Code
+     * @param  array   $responseHeaders  Additional HTTP headers to return with the response ()
+     *
+     * @return array|object|null
+     */
+    public function updateKlasse(
+        UpdateKlasseRequest $updateKlasseRequest,
         int &$responseCode,
         array &$responseHeaders
     ): array|object|null;

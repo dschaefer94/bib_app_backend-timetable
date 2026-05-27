@@ -33,7 +33,7 @@ class TypeMismatchException extends RuntimeException
     public static function fromValue(
         $expected_type,
         $actual_value,
-        ?DeserializationContext $context = null // Geändert: Explizit nullable gemacht
+        DeserializationContext $context = null
     ) {
         if (null !== $context && count($context->getCurrentPath()) > 0) {
             $property = sprintf('property "%s" to be ', implode('.', $context->getCurrentPath()));

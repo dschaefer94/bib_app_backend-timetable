@@ -133,6 +133,16 @@ class CalendarEvent
     protected ?\DateTime $updatedAt = null;
 
     /**
+     * Der Typ der Änderung, falls es sich um einen geänderten Termin handelt. 1: gelöscht 2: neu 3: geändert
+     *
+     * @var int|null
+     * @SerializedName("changeType")
+     * @Type("int")
+     */
+    #[Assert\Type("int")]
+    protected ?int $changeType = null;
+
+    /**
      * Constructor
      * @param array|null $data Associated array of property values initializing the model
      */
@@ -149,6 +159,7 @@ class CalendarEvent
             $this->kategorie = array_key_exists('kategorie', $data) ? $data['kategorie'] : $this->kategorie;
             $this->originalEvent = array_key_exists('originalEvent', $data) ? $data['originalEvent'] : $this->originalEvent;
             $this->updatedAt = array_key_exists('updatedAt', $data) ? $data['updatedAt'] : $this->updatedAt;
+            $this->changeType = array_key_exists('changeType', $data) ? $data['changeType'] : $this->changeType;
         }
     }
 
@@ -415,6 +426,33 @@ class CalendarEvent
     public function setUpdatedAt(?\DateTime $updatedAt = null): self
     {
         $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+
+
+
+    /**
+     * Gets changeType.
+     *
+     * @return int|null
+     */
+    public function getChangeType(): ?int
+    {
+        return $this->changeType;
+    }
+
+    /**
+     * Sets changeType.
+     *
+     * @param int|null $changeType  Der Typ der Änderung, falls es sich um einen geänderten Termin handelt. 1: gelöscht 2: neu 3: geändert
+     *
+     * @return $this
+     */
+    public function setChangeType(?int $changeType = null): self
+    {
+        $this->changeType = $changeType;
 
         return $this;
     }

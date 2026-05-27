@@ -195,4 +195,15 @@ class CalendarEventTest extends TestCase
     {
         $this->markTestSkipped('Test for property updatedAt not implemented');
     }
+
+    /**
+     * Test attribute "changeType"
+     *
+     * @group unit
+     * @small
+     */
+    public function testPropertyChangeType(): void
+    {
+        $this->markTestSkipped('Test for property changeType not implemented');
+    }
 }

@@ -22,6 +22,16 @@ class CalendarApiService implements CalendarApiInterface
     /**
      * @inheritDoc
      */
+    public function setBearerAuth(?string $value): void
+    {
+        // Diese Methode ist für die Server-Implementierung in der Regel nicht relevant.
+        // Die Authentifizierung wird vom Symfony Security System gehandhabt.
+        // Sie muss hier implementiert werden, da sie Teil des generierten Interfaces ist.
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getCalendar(int &$responseCode, array &$responseHeaders): array|object|null
     {
         // TODO: Sobald die Authentifizierung implementiert ist, sollte die Benutzer-ID
