@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
-// use App\DBAL\Types\KalenderKategorieEnumType; // Import entfernt
+use App\Repository\StundenplanNeuRepository; // Added this line
 
 #[ORM\Entity(repositoryClass: StundenplanNeuRepository::class)]
 #[ORM\Table(name: "stundenplan_neu")]

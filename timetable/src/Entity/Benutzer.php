@@ -48,6 +48,17 @@ class Benutzer implements UserInterface
         return $this;
     }
 
+    public function getIdentityId(): string
+    {
+        return $this->identityId;
+    }
+
+    public function setIdentityId(string $identityId): self
+    {
+        $this->identityId = $identityId;
+        return $this;
+    }
+
     /**
      * @see UserInterface
      */

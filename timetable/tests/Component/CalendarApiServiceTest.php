@@ -44,7 +44,7 @@ class CalendarApiServiceTest extends TestCase
         $klasseName = 'Dummyklasse';
 
         // Mock-Entitäten erstellen
-        $mockBenutzer = (new Benutzer())->setEmail('dummy@example.com')->setPassword('hash')->setIsAdmin(true);
+        $mockBenutzer = (new Benutzer())->setEmail('dummy@example.com')->setIsAdmin(true);
         // Setze die ID manuell, da sie nicht von Doctrine generiert wird
         $reflection = new \ReflectionClass($mockBenutzer);
         $property = $reflection->getProperty('id');
@@ -123,7 +123,7 @@ class CalendarApiServiceTest extends TestCase
         $dummyUserUuid = Uuid::fromString('550e8400-e29b-41d4-a716-446655440000');
 
         // Mock PersoenlicheDaten ohne Klasse
-        $mockBenutzer = (new Benutzer())->setEmail('dummy@example.com')->setPassword('hash')->setIsAdmin(true);
+        $mockBenutzer = (new Benutzer())->setEmail('dummy@example.com')->setIsAdmin(true);
         $reflection = new \ReflectionClass($mockBenutzer);
         $property = $reflection->getProperty('id');
         $property->setAccessible(true);
@@ -155,7 +155,7 @@ class CalendarApiServiceTest extends TestCase
         $klasseName = 'Dummyklasse';
 
         // Mock-Entitäten erstellen
-        $mockBenutzer = (new Benutzer())->setEmail('dummy@example.com')->setPassword('hash')->setIsAdmin(true);
+        $mockBenutzer = (new Benutzer())->setEmail('dummy@example.com')->setIsAdmin(true);
         $reflection = new \ReflectionClass($mockBenutzer);
         $property = $reflection->getProperty('id');
         $property->setAccessible(true);

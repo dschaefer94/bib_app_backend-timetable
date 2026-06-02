@@ -9,27 +9,29 @@ use App\Entity\StundenplanNeu;
 use App\Entity\AenderungsLabel; // Importiere die neue Entität
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Uid\Uuid;
 
 class AppFixtures extends Fixture
 {
-    public function __construct(
-        private UserPasswordHasherInterface $passwordHasher
-    ) {}
+    public function __construct()
+    {
+    }
 
     public function load(ObjectManager $manager): void
     {
         // Dummyklasse erstellen
         $dummyKlasse = new CalendarSource();
         $dummyKlasse->setClassName('Dummyklasse');
+        //TODO: eigene api auf Plesk oder localhost anlegen, Link fehlerhaft
         $dummyKlasse->setIcalLink('https://bibapp.pbd2h24asc.web.bib.de/empty.ics');
         $manager->persist($dummyKlasse);
 
         // Dummyuser erstellen
         $dummyUser = new Benutzer();
         $dummyUser->setEmail('dummyuser@example.com');
-        $dummyUser->setPassword($this->passwordHasher->hashPassword($dummyUser, 'password'));
+        // Set a dummy identity_id for OIDC integration
+        $dummyUser->setIdentityId('dummy-oidc-id-12345'); // Added this line
+        // Removed setPassword as user management is now OIDC
         $dummyUser->setIsAdmin(true);
         $manager->persist($dummyUser);
 

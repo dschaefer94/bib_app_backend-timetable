@@ -10,22 +10,22 @@ use App\DataFixtures\AppFixtures;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Uid\Uuid;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Doctrine\Common\DataFixtures\Purger\ORMPurger;
 use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
+use Doctrine\ORM\Tools\SchemaTool; // Added this line
 
 class DatabaseIntegrationTest extends KernelTestCase
 {
     private ?EntityManagerInterface $entityManager;
-    private UserPasswordHasherInterface $passwordHasher; // Nicht mehr nullable
 
     protected function setUp(): void
     {
         self::bootKernel();
         $container = self::$kernel->getContainer();
         $this->entityManager = $container->get('doctrine')->getManager();
-        // Den passwordHasher aus dem Container holen, da er nicht direkt injiziert werden kann
-        $this->passwordHasher = $container->get(UserPasswordHasherInterface::class); // Geändert
+
+        // Ensure the database schema is up-to-date for tests
+        $this->dropAndCreateSchema();
 
         // Sicherstellen, dass die Datenbank für jeden Test sauber ist und Fixtures geladen werden
         $this->loadFixtures();
@@ -39,7 +39,14 @@ class DatabaseIntegrationTest extends KernelTestCase
             $this->entityManager->close();
             $this->entityManager = null;
         }
-        // $this->passwordHasher = null; // Nicht mehr notwendig, da es eine injizierte Abhängigkeit ist
+    }
+
+    private function dropAndCreateSchema(): void
+    {
+        $metadatas = $this->entityManager->getMetadataFactory()->getAllMetadata();
+        $schemaTool = new SchemaTool($this->entityManager);
+        $schemaTool->dropSchema($metadatas);
+        $schemaTool->createSchema($metadatas);
     }
 
     private function loadFixtures(): void
@@ -48,15 +55,14 @@ class DatabaseIntegrationTest extends KernelTestCase
         $purger = new ORMPurger($this->entityManager);
         $executor = new ORMExecutor($this->entityManager, $purger);
         // Übergebe den passwordHasher an die AppFixtures
-        $executor->execute([new AppFixtures($this->passwordHasher)], true);
+        $executor->execute([new AppFixtures()], true);
     }
 
     public function testDummyUserAndPersonalDataAreLoaded(): void
     {
-        $dummyUserUuid = Uuid::fromString('550e8400-e29b-41d4-a716-446655440000');
-
+        // Find the dummy user by email, as the UUID is dynamically generated
         /** @var Benutzer|null $user */
-        $user = $this->entityManager->getRepository(Benutzer::class)->find($dummyUserUuid);
+        $user = $this->entityManager->getRepository(Benutzer::class)->findOneBy(['email' => 'dummyuser@example.com']);
         $this->assertNotNull($user, 'Dummy user should be found.');
         $this->assertEquals('dummyuser@example.com', $user->getEmail());
 
