@@ -29,11 +29,19 @@ class CalendarApiServiceTest extends TestCase
         $this->persoenlicheDatenRepositoryMock = $this->createMock(EntityRepository::class);
         $this->stundenplanNeuRepositoryMock = $this->createMock(EntityRepository::class);
 
+        $persRepo = $this->persoenlicheDatenRepositoryMock;
+        $stundenRepo = $this->stundenplanNeuRepositoryMock;
         $this->entityManagerMock->method('getRepository')
-            ->willReturnMap([
-                [PersoenlicheDaten::class, $this->persoenlicheDatenRepositoryMock],
-                [StundenplanNeu::class, $this->stundenplanNeuRepositoryMock],
-            ]);
+            ->willReturnCallback(function ($class) use ($persRepo, $stundenRepo) {
+                if ($class === PersoenlicheDaten::class) {
+                    return $persRepo;
+                }
+                if ($class === StundenplanNeu::class) {
+                    return $stundenRepo;
+                }
+                // Return a generic repository mock for other classes (avoid returning null because of strict return types)
+                return $this->createMock(EntityRepository::class);
+            });
 
         $this->calendarApiService = new CalendarApiService($this->entityManagerMock);
     }
