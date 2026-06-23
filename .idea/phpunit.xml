@@ -3,6 +3,7 @@
   <component name="PHPUnit">
     <option name="directories">
       <list>
+        <option value="$PROJECT_DIR$/timetable/tests" />
         <option value="$PROJECT_DIR$/timetable/src/OpenApi/Tests/Api" />
         <option value="$PROJECT_DIR$/timetable/src/OpenApi/Tests/Model" />
         <option value="$PROJECT_DIR$/timetable/src/OpenApi/Tests/Controller" />

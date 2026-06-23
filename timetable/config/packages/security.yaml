@@ -20,7 +20,8 @@ security:
             lazy: true
             provider: app_user_provider
             stateless: true # JWT authentication is stateless
-            jwt: ~ # Enable the JWT authenticator
+            custom_authenticators:
+                - App\Security\JwtAuthenticator # Use custom Keycloak JWT authenticator
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall

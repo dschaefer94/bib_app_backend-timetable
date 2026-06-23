@@ -32,4 +32,4 @@ EXPOSE 8000
 
 # Command to run the Symfony local server (for development)
 # This might be overridden by docker-compose command
-CMD ["php", "bin/console", "symfony:server:start", "--port=8000", "--no-supervise"]
+CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]

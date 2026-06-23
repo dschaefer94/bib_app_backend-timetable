@@ -49,9 +49,11 @@ services:
       KEYCLOAK_ADMIN: admin # Standard Admin-Benutzername
       KEYCLOAK_ADMIN_PASSWORD: admin # Standard Admin-Passwort
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://database:5432/keycloak_db # Keycloak nutzt den 'database' Service
-      KC_DB_USERNAME: keycloak # Keycloak DB-Benutzer
-      KC_DB_PASSWORD: password # Keycloak DB-Passwort
+      # Use the existing Postgres database and user created for the app
+      # Keycloak expects a DB; point it to the already provisioned DB and credentials
+      KC_DB_URL: jdbc:postgresql://database:5432/pbd2h24asc_stundenplan_db # use existing DB
+      KC_DB_USERNAME: symfony # reuse existing DB user
+      KC_DB_PASSWORD: '!ChangeMe!' # reuse existing DB password
       KC_HOSTNAME: localhost # Wichtig für die korrekte Generierung von URLs in Keycloak
       KC_HTTP_PORT: 8080 # Keycloak lauscht intern auf Port 8080
     ports:

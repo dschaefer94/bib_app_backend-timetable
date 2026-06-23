@@ -17,3 +17,25 @@
 ###> lexik/jwt-authentication-bundle ###
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
+
+###> IDE / Editor ###
+/.idea/
+/.vscode/
+*.iml
+###< IDE / Editor ###
+
+###> Keycloak – sensible Automatisierungs-Ergebnisse ###
+# Diese Dateien enthalten echte Secrets / Zugangsdaten und dürfen NICHT ins Repository.
+KEYCLOAK_AUTOMATION_RESULT.md
+KEYCLOAK_DEMO_USERS.md
+KEYCLOAK_TEST_USER.md
+KEYCLOAK_E2E_RESULT.json
+###< Keycloak – sensible Automatisierungs-Ergebnisse ###
+
+###> Sonstige sensible Laufzeit-Dateien ###
+# ACHTUNG: .env enthält derzeit echte APP_SECRET- und JWT_PASSPHRASE-Werte.
+# Ersetze sie durch Platzhalter und lege die echten Werte in .env.local ab.
+*.env.backup
+/config/jwt/*.key
+###< Sonstige sensible Laufzeit-Dateien ###
+

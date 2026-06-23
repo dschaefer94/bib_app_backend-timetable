@@ -20,13 +20,14 @@ class BenutzerProvider implements UserProviderInterface
 
     /**
      * Loads the user for the given user identifier (identityId/sub claim).
+     * User should already exist after JWT Authenticator's provisioning step.
      */
     public function loadUserByIdentifier(string $identifier): UserInterface
     {
         $benutzer = $this->benutzerRepository->findOneBy(['identityId' => $identifier]);
 
         if (!$benutzer) {
-            throw new UserNotFoundException(sprintf('User with identityId "%s" not found.', $identifier));
+            throw new UserNotFoundException(sprintf('User with identityId "%s" not found. User should have been provisioned during authentication.', $identifier));
         }
 
         return $benutzer;

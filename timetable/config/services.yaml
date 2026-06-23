@@ -31,3 +31,17 @@ services:
     #     resource: '../src/OpenApi/Controller'
     #     tags: ['controller.service_arguments']
     #     public: true
+
+    # Keycloak/JWT Authentication Services
+    App\Security\JwtAuthenticator:
+        arguments:
+            $oidcIssuer: '%env(OIDC_ISSUER)%'
+            $entityManager: '@doctrine.orm.entity_manager'
+            $provisioningService: '@App\Service\KeycloakUserProvisioningService'
+            $logger: '@logger'
+
+    App\Service\KeycloakUserProvisioningService:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $logger: '@logger'
+
