@@ -32,6 +32,11 @@ KEYCLOAK_TEST_USER.md
 KEYCLOAK_E2E_RESULT.json
 ###< Keycloak – sensible Automatisierungs-Ergebnisse ###
 
+###> JetBrains HTTP Client ###
+# Enthaelt echte Tokens/Secrets – wird vom get_token.ps1 automatisch befuellt
+/http-client.private.env.json
+###< JetBrains HTTP Client ###
+
 ###> Sonstige sensible Laufzeit-Dateien ###
 # ACHTUNG: .env enthält derzeit echte APP_SECRET- und JWT_PASSPHRASE-Werte.
 # Ersetze sie durch Platzhalter und lege die echten Werte in .env.local ab.

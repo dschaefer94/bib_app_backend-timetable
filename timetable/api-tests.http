@@ -1,0 +1,23 @@
+### Bib-App Timetable API Tests
+### Umgebung wechseln: oben rechts im Editor "dev" auswählen
+### Token holen: .\scripts\get_token.ps1  (kopiert Token in Zwischenablage + http-client.private.env.json)
+
+### ── User Profile ─────────────────────────────────────────────────────────
+
+### Eigenes Profil abrufen
+GET {{baseUrl}}/api/profile/me
+Authorization: Bearer {{token}}
+Accept: application/json
+
+###
+
+### ── Calendar ──────────────────────────────────────────────────────────────
+
+### Stundenplan abrufen
+GET {{baseUrl}}/api/calendar
+Authorization: Bearer {{token}}
+Accept: application/json
+
+###
+
+
