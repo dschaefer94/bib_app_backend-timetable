@@ -9,12 +9,40 @@ $adminPass = 'admin'
 $realmName = 'bib-app'
 $clientId = 'bib-app-backend'
 $redirectUris = @('http://localhost:8000/*','http://localhost:3000/*')
+$projectRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+
+function Wait-KeycloakReady([int]$timeoutSec = 120) {
+    Write-Host "Waiting up to $timeoutSec seconds for Keycloak at $baseUrl..."
+    $max = [math]::Ceiling($timeoutSec / 2)
+    $i = 0
+    while ($i -lt $max) {
+        try {
+            $r = Invoke-WebRequest -Uri $baseUrl -UseBasicParsing -TimeoutSec 3
+            if ($r.StatusCode -eq 200) { Write-Host 'Keycloak HTTP reachable.'; return $true }
+        } catch { }
+        Start-Sleep -Seconds 2; $i++
+    }
+    Write-Warning 'Keycloak did not respond within timeout.'
+    return $false
+}
 
 function Get-AdminToken {
     Write-Host "Requesting admin token from $baseUrl..."
+    # ensure Keycloak is reachable first
+    Wait-KeycloakReady | Out-Null
     $body = @{ grant_type='password'; username=$adminUser; password=$adminPass; client_id='admin-cli' }
-    $resp = Invoke-RestMethod -Method Post -Uri "$baseUrl/realms/master/protocol/openid-connect/token" -ContentType 'application/x-www-form-urlencoded' -Body $body
-    return $resp.access_token
+    $tries = 0
+    while ($tries -lt 5) {
+        try {
+            $resp = Invoke-RestMethod -Method Post -Uri "$baseUrl/realms/master/protocol/openid-connect/token" -ContentType 'application/x-www-form-urlencoded' -Body $body -TimeoutSec 10
+            if ($resp -and $resp.access_token) { return $resp.access_token }
+        } catch {
+            Write-Host "Admin token request failed (attempt $($tries+1)): $_" -ForegroundColor Yellow
+            Start-Sleep -Seconds 2
+        }
+        $tries++
+    }
+    throw 'Failed to obtain admin token after retries.'
 }
 
 function Realm-Exists($token, $realm) {
@@ -33,6 +61,13 @@ function Create-Realm($token, $realm) {
 }
 
 function Create-Client($token, $realm, $clientId, $redirectUris) {
+    # Idempotent: reuse existing client when present; create only if missing
+    $existing = Invoke-RestMethod -Method Get -Uri "$baseUrl/admin/realms/$realm/clients?clientId=$clientId" -Headers @{ Authorization = "Bearer $token" }
+    if ($existing) {
+        if ($existing -is [System.Array]) { return $existing[0] }
+        return $existing
+    }
+
     Write-Host "Creating client '$clientId' in realm '$realm'..."
     $body = @{
         clientId = $clientId
@@ -81,8 +116,8 @@ try {
     $secret = Get-ClientSecret $token $realmName $clientInternalId
     Write-Host "Client secret obtained: $secret"
 
-    # Write results to file
-    $resultPath = Join-Path -Path (Get-Location) -ChildPath 'KEYCLOAK_AUTOMATION_RESULT.md'
+    # Write results to file (always in project root, not current shell location)
+    $resultPath = Join-Path -Path $projectRoot -ChildPath 'KEYCLOAK_AUTOMATION_RESULT.md'
     $content = @()
     $content += "# Keycloak Automation Result"
     $content += "Generated at: $(Get-Date -Format o)"
@@ -100,8 +135,8 @@ try {
     $content | Out-File -FilePath $resultPath -Encoding utf8
     Write-Host "Wrote results to $resultPath"
 
-    # Optionally create/update .env.local
-    $envPath = Join-Path -Path (Get-Location) -ChildPath '.env.local'
+    # Update .env.local in project root
+    $envPath = Join-Path -Path $projectRoot -ChildPath '.env.local'
     $envLines = @()
     if (Test-Path $envPath) {
         $envLines = Get-Content $envPath
@@ -111,7 +146,9 @@ try {
     $envLines += "OIDC_ISSUER=http://localhost:8080/realms/$realmName"
     $envLines += "KEYCLOAK_CLIENT_ID=$clientId"
     $envLines += "KEYCLOAK_CLIENT_SECRET=$secret"
-    $envLines | Out-File -FilePath $envPath -Encoding utf8
+    # Write UTF-8 without BOM (Symfony Dotenv rejects BOM)
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllLines($envPath, $envLines, $utf8NoBom)
     Write-Host "Wrote .env.local with Keycloak variables"
 
     Write-Host "Automation completed successfully."

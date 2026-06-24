@@ -51,10 +51,39 @@ try {
 } catch {
     Write-Host ""
     Write-Host "[FEHLER]  Token-Request fehlgeschlagen:" -ForegroundColor Red
-    Write-Host "    $_" -ForegroundColor Red
-    Write-Host ""
-    Write-Host "Ist Keycloak gestartet?  ->  docker-compose up -d" -ForegroundColor Yellow
-    exit 1
+    $err = $_ | Out-String
+    Write-Host "    $err" -ForegroundColor Red
+    # Development convenience: if realm/client config is out of sync, repair and retry once.
+    $shouldRetry = ($err -match 'Realm does not exist') -or ($err -match 'invalid_client') -or ($err -match 'Client not found') -or ($err -match 'unauthorized_client')
+    if ($shouldRetry) {
+        Write-Host "Realm/Client scheint nicht synchron. Versuche create_keycloak_realm.ps1 und danach einen Retry..." -ForegroundColor Yellow
+        try {
+            $scriptPath = Join-Path $PSScriptRoot 'create_keycloak_realm.ps1'
+            if (Test-Path $scriptPath) {
+                & $scriptPath
+                Start-Sleep -Seconds 2
+                Write-Host 'Retrying token request...'
+                $resp = Invoke-RestMethod -Method Post -Uri "$baseUrl/realms/$realmName/protocol/openid-connect/token" -ContentType 'application/x-www-form-urlencoded' -Body $body
+                if ($resp -and $resp.access_token) {
+                    Write-Host "Retry erfolgreich." -ForegroundColor Green
+                } else {
+                    throw 'Retry lieferte kein access_token.'
+                }
+            } else {
+                Write-Host "create_keycloak_realm.ps1 not found in $PSScriptRoot" -ForegroundColor Yellow
+                exit 1
+            }
+        } catch {
+            Write-Host "Retry after realm creation failed: $_" -ForegroundColor Red
+            Write-Host ""
+            Write-Host "Ist Keycloak gestartet?  ->  docker-compose up -d" -ForegroundColor Yellow
+            exit 1
+        }
+    } else {
+        Write-Host ""
+        Write-Host "Ist Keycloak gestartet?  ->  docker-compose up -d" -ForegroundColor Yellow
+        exit 1
+    }
 }
 $token = $resp.access_token
 if (-not $token) {

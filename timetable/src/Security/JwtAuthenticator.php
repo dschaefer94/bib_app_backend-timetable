@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
@@ -23,6 +24,7 @@ class JwtAuthenticator extends AbstractAuthenticator
     private LoggerInterface $logger;
     private ?array $cachedJwks = null;
     private ?int $jwksLastFetch = null;
+    private ?string $jwksIssuer = null;
     private const JWKS_CACHE_TTL = 3600; // 1 hour
 
     public function __construct(
@@ -85,7 +87,7 @@ class JwtAuthenticator extends AbstractAuthenticator
             );
         } catch (\Throwable $e) {
             $this->logger->error('JWT validation error', ['exception' => $e->getMessage()]);
-            throw new AuthenticationException('Invalid JWT token: ' . $e->getMessage());
+            throw new CustomUserMessageAuthenticationException('Invalid JWT token: ' . $e->getMessage());
         }
     }
 
@@ -150,15 +152,17 @@ class JwtAuthenticator extends AbstractAuthenticator
             throw new AuthenticationException('JWT header missing kid');
         }
 
-        if (!isset($payload['iss']) || $payload['iss'] !== $this->oidcIssuer) {
+        if (!isset($payload['iss']) || !is_string($payload['iss'])) {
             throw new AuthenticationException('Invalid token issuer');
         }
+
+        $effectiveIssuer = $this->resolveEffectiveIssuer($payload['iss']);
 
         if (isset($payload['exp']) && (int) $payload['exp'] < time()) {
             throw new AuthenticationException('Token has expired');
         }
 
-        $jwks = $this->getKeycloakJwks();
+        $jwks = $this->getKeycloakJwks($effectiveIssuer);
 
         $jwk = $this->findMatchingJwk($jwks, $header['kid']);
         $publicKey = $this->jwkToRsaPublicKeyPem($jwk);
@@ -176,8 +180,14 @@ class JwtAuthenticator extends AbstractAuthenticator
     /**
      * Fetch JWKS (JSON Web Key Set) from Keycloak with caching.
      */
-    private function getKeycloakJwks(): array
+    private function getKeycloakJwks(string $issuer): array
     {
+        // Invalidate cache if issuer changed
+        if ($this->jwksIssuer !== null && $this->jwksIssuer !== $issuer) {
+            $this->cachedJwks = null;
+            $this->jwksLastFetch = null;
+        }
+
         // Use cached JWKS if available and not expired
         if ($this->cachedJwks !== null && $this->jwksLastFetch !== null) {
             if (time() - $this->jwksLastFetch < self::JWKS_CACHE_TTL) {
@@ -185,7 +195,7 @@ class JwtAuthenticator extends AbstractAuthenticator
             }
         }
 
-        $jwksUrls = $this->buildCandidateJwksUrls();
+        $jwksUrls = $this->buildCandidateJwksUrls($issuer);
 
         $lastError = null;
         foreach ($jwksUrls as $jwksUrl) {
@@ -211,6 +221,7 @@ class JwtAuthenticator extends AbstractAuthenticator
 
                 $this->cachedJwks = $jwks;
                 $this->jwksLastFetch = time();
+                $this->jwksIssuer = $issuer;
 
                 return $jwks;
             } catch (\Throwable $e) {
@@ -229,9 +240,9 @@ class JwtAuthenticator extends AbstractAuthenticator
      * Build JWKS URL candidates.
      * First try the configured issuer URL, then fall back to the internal Docker hostname if needed.
      */
-    private function buildCandidateJwksUrls(): array
+    private function buildCandidateJwksUrls(string $issuer): array
     {
-        $issuerBase = rtrim($this->oidcIssuer, '/');
+        $issuerBase = rtrim($issuer, '/');
         $urls = [$issuerBase . '/protocol/openid-connect/certs'];
 
         $parts = parse_url($issuerBase);
@@ -242,6 +253,42 @@ class JwtAuthenticator extends AbstractAuthenticator
         }
 
         return array_values(array_unique($urls));
+    }
+
+    /**
+     * Resolve issuer used for verification and JWKS lookup.
+     * In local dev, allow localhost <-> keycloak hostname aliases and realm drift
+     * after resets to reduce false 401s.
+     */
+    private function resolveEffectiveIssuer(string $tokenIssuer): string
+    {
+        $configured = rtrim($this->oidcIssuer, '/');
+        $token = rtrim($tokenIssuer, '/');
+
+        if ($token === $configured) {
+            return $configured;
+        }
+
+        $configuredParts = parse_url($configured) ?: [];
+        $tokenParts = parse_url($token) ?: [];
+
+        $isLocalConfigured = in_array($configuredParts['host'] ?? '', ['localhost', '127.0.0.1', 'keycloak'], true);
+        $isLocalToken = in_array($tokenParts['host'] ?? '', ['localhost', '127.0.0.1', 'keycloak'], true);
+        $sameScheme = (($configuredParts['scheme'] ?? 'http') === ($tokenParts['scheme'] ?? 'http'));
+        $configuredPort = $configuredParts['port'] ?? (($configuredParts['scheme'] ?? 'http') === 'https' ? 443 : 80);
+        $tokenPort = $tokenParts['port'] ?? (($tokenParts['scheme'] ?? 'http') === 'https' ? 443 : 80);
+        $samePort = ($configuredPort === $tokenPort);
+
+        // Only relax in local setup. Production-like hosts still require exact match.
+        if ($isLocalConfigured && $isLocalToken && $sameScheme && $samePort) {
+            $this->logger->warning('JWT issuer differs from configured OIDC_ISSUER, using token issuer for local validation', [
+                'configuredIssuer' => $configured,
+                'tokenIssuer' => $token,
+            ]);
+            return $token;
+        }
+
+        throw new AuthenticationException('Invalid token issuer');
     }
 
     private function findMatchingJwk(array $jwks, string $kid): array

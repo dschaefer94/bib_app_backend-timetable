@@ -1,0 +1,26 @@
+### Create a new Klasse (CalendarSource)
+# Replace {{baseUrl}} and {{token}} in your HTTP client environment (see api-tests.http)
+# Provide the `name` and `ical_link` in the JSON body below.
+
+POST http://127.0.0.1:8000/api/klassen
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "pbd2h24a",
+  "ical_link": "https://intranet.bib.de/ical/d819a07653892b46b6e4d2765246b7ab"
+}
+
+### Example: create with variables
+# You can also set variables at the top of the file or use your http-client env file:
+# @baseUrl = http://127.0.0.1:8000
+# @token = <your-jwt-here>
+
+### Notes
+# - Endpoint expects JSON with `name` and `ical_link` (both required).
+# - Successful response: 201 Created with JSON body (CreateKlasseResponse).
+# - Use the script `scripts/get_token.ps1` to obtain a token for local Keycloak if needed.
+#   Example PowerShell to get token and run this request in an HTTP client:
+#     .\scripts\get_token.ps1; (copy token into http-client.private.env.json or set {{token}})
+

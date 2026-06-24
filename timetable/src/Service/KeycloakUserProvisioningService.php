@@ -48,6 +48,24 @@ class KeycloakUserProvisioningService
         $benutzer = $this->entityManager->getRepository(Benutzer::class)
             ->findOneBy(['identityId' => $identityId]);
 
+        // Realm resets can recreate users with a new `sub` while keeping the same email.
+        // Re-link by email first to avoid unique constraint violations on `email`.
+        if (!$benutzer && $email) {
+            $byEmail = $this->entityManager->getRepository(Benutzer::class)
+                ->findOneBy(['email' => $email]);
+
+            if ($byEmail) {
+                $this->logger->warning('Relinking existing user to new identityId after IdP reset', [
+                    'oldIdentityId' => $byEmail->getIdentityId(),
+                    'newIdentityId' => $identityId,
+                    'email' => $email,
+                ]);
+
+                $byEmail->setIdentityId($identityId);
+                $benutzer = $byEmail;
+            }
+        }
+
         if (!$benutzer) {
             // Create new user
             $this->logger->info('Provisioning new user', ['identityId' => $identityId, 'email' => $email]);
