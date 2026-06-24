@@ -1,4 +1,4 @@
 openapi_calendar:
     path: /api/calendar
-    controller: App\OpenApi\Controller\CalendarController::getCalendarAction
+    controller: App\Controller\CalendarApiController::getCalendar
     methods: [GET]

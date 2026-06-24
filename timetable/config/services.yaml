@@ -14,23 +14,8 @@ services:
             - '../src/DBAL/'
             - '../src/OpenApi/' # Wieder hinzugefügt: OpenApi-Komponente ausschließen
 
-    # Aliase für OpenAPI Services, damit Autowiring funktioniert (wieder auskommentiert)
-    # App\OpenApi\Api\ApiServer: '@open_api_server.api.api_server'
-    # App\OpenApi\Service\SerializerInterface: '@open_api_server.service.serializer'
-    # App\OpenApi\Service\ValidatorInterface: '@open_api_server.service.validator'
-
-    # OpenAPI Handler für /api/calendar (wieder auskommentiert)
-    # App\Api\CalendarApiService:
-    #     arguments:
-    #         $entityManager: '@doctrine.orm.entity_manager'
-    #     tags:
-    #         - { name: 'open_api_server.api', api: 'calendar' }
-
-    # OpenAPI Generator Controller als echte Symfony Controller registrieren (wieder auskommentiert)
-    # App\OpenApi\Controller\:
-    #     resource: '../src/OpenApi/Controller'
-    #     tags: ['controller.service_arguments']
-    #     public: true
+    # OpenAPI-spezifische Service-Wiring bleibt deaktiviert.
+    # /api/calendar wird über einen manuellen Controller in src/Controller bereitgestellt.
 
     # Keycloak/JWT Authentication Services
     App\Security\JwtAuthenticator:

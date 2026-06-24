@@ -3,7 +3,7 @@
 # kopiert es in die Zwischenablage und aktualisiert http-client.private.env.json.
 # Verwendung: .\scripts\get_token.ps1 [-User studentuser|teacheruser|adminuser]
 param(
-    [ValidateSet('studentuser', 'teacheruser', 'adminuser')]
+    [ValidateSet('dummyuser', 'studentuser', 'teacheruser', 'adminuser')]
     [string]$User = 'studentuser'
 )
 $ErrorActionPreference = 'Stop'
@@ -12,6 +12,7 @@ $baseUrl   = 'http://localhost:8080'
 $realmName = 'bib-app'
 $clientId  = 'bib-app-backend'
 $credentials = @{
+    dummyuser   = 'dummypass'
     studentuser = 'studentpass'
     teacheruser = 'teacherpass'
     adminuser   = 'adminpass'

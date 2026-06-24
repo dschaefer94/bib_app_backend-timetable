@@ -11,12 +11,14 @@ use App\OpenApi\Model\CalendarEvent;
 use App\OpenApi\Model\CalendarEventOriginalEvent;
 use App\OpenApi\Model\GetCalendar200Response;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Uid\Uuid; // Neu hinzugefügt
 
 class CalendarApiService implements CalendarApiInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        private Security $security
     ) {}
 
     /**
@@ -41,9 +43,15 @@ class CalendarApiService implements CalendarApiInterface
         // Be defensive: when EntityManager is mocked in component tests it may return null for getRepository.
         // Avoid a TypeError by checking the returned repository before calling findOneBy().
         $dummyUser = null;
-        $userRepo = $this->entityManager->getRepository(Benutzer::class);
-        if ($userRepo && method_exists($userRepo, 'findOneBy')) {
-            $dummyUser = $userRepo->findOneBy(['email' => 'dummyuser@example.com']);
+        $authUser = $this->security->getUser();
+        if ($authUser instanceof Benutzer) {
+            $dummyUser = $authUser;
+        } else {
+            // Fallback for component tests without a security context
+            $userRepo = $this->entityManager->getRepository(Benutzer::class);
+            if ($userRepo && method_exists($userRepo, 'findOneBy')) {
+                $dummyUser = $userRepo->findOneBy(['email' => 'dummyuser@example.com']);
+            }
         }
 
         // 1. Persönliche Daten des Benutzers abrufen
@@ -77,7 +85,7 @@ class CalendarApiService implements CalendarApiInterface
                 'type' => '/problems/calendar-not-found',
                 'title' => 'Calendar not found',
                 'status' => 404,
-                'detail' => 'No calendar could be resolved for the current user context (dummyuser).',
+                'detail' => 'No calendar could be resolved for the current authenticated user context.',
                 'instance' => '/api/calendar#missing-context'
             ]);
         }

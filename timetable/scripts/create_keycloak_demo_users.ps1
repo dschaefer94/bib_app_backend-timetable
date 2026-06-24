@@ -11,6 +11,7 @@ $adminPass = 'admin'
 
 $rolesToCreate = @('admin', 'student', 'teacher')
 $demoUsers = @(
+    @{ username='dummyuser'; password='dummypass'; email='dummyuser@example.com'; firstName='Dummy'; lastName='User'; role='student' },
     @{ username='studentuser'; password='studentpass'; email='studentuser@example.com'; firstName='Student'; lastName='User'; role='student' },
     @{ username='teacheruser'; password='teacherpass'; email='teacheruser@example.com'; firstName='Teacher'; lastName='User'; role='teacher' },
     @{ username='adminuser'; password='adminpass'; email='adminuser@example.com'; firstName='Admin'; lastName='User'; role='admin' }
@@ -125,6 +126,7 @@ Created roles:
 - teacher
 
 Created users:
+- dummyuser / dummypass -> student
 - studentuser / studentpass -> student
 - teacheruser / teacherpass -> teacher
 - adminuser / adminpass -> admin

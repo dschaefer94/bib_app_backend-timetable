@@ -26,6 +26,12 @@ class AppFixtures extends Fixture
         $dummyKlasse->setIcalLink('https://bibapp.pbd2h24asc.web.bib.de/empty.ics');
         $manager->persist($dummyKlasse);
 
+        // Zielklasse fuer studentuser
+        $pbdKlasse = new CalendarSource();
+        $pbdKlasse->setClassName('pbd2h24a');
+        $pbdKlasse->setIcalLink('https://intranet.bib.de/ical/d819a07653892b46b6e4d2765246b7ab');
+        $manager->persist($pbdKlasse);
+
         // Dummyuser erstellen
         $dummyUser = new Benutzer();
         $dummyUser->setEmail('dummyuser@example.com');
@@ -88,6 +94,22 @@ class AppFixtures extends Fixture
                 $dayOffset = 0;
                 $startOfWeek = $startOfWeek->modify('+1 week');
             }
+        }
+
+        // Zusätzliche Termine für pbd2h24a
+        $pbdStartOfWeek = $startOfWeek;
+        $pbdDayOffset = 0;
+        foreach (['unterricht', 'projekt', 'prüfung'] as $kategorie) {
+            $event = new StundenplanNeu();
+            $event->setSummary("PBD2H24A: " . ucfirst($kategorie));
+            $event->setDescription("Beschreibung für " . $kategorie . " in pbd2h24a.");
+            $event->setStart($pbdStartOfWeek->modify('+' . $pbdDayOffset . ' days')->setTime(8, 30, 0));
+            $event->setEnd($pbdStartOfWeek->modify('+' . $pbdDayOffset . ' days')->setTime(10, 0, 0));
+            $event->setLocation("Raum " . (300 + $pbdDayOffset));
+            $event->setKategorie($kategorie);
+            $event->setKlasse($pbdKlasse->getClassName());
+            $manager->persist($event);
+            $pbdDayOffset++;
         }
 
         // Termine für jedes Label (StundenplanNeu) - hier wird weiterhin der String-Label gesetzt

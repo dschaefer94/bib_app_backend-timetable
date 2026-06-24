@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Benutzer;
+use App\Entity\CalendarSource;
 use App\Entity\PersoenlicheDaten;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -39,6 +40,7 @@ class KeycloakUserProvisioningService
         $email = $claims['email'] ?? null;
         $givenName = $claims['given_name'] ?? null;
         $familyName = $claims['family_name'] ?? null;
+        $preferredUsername = $claims['preferred_username'] ?? null;
 
         if (!$identityId) {
             throw new \InvalidArgumentException('JWT claims must contain "sub" (identityId)');
@@ -115,6 +117,11 @@ class KeycloakUserProvisioningService
             }
         }
 
+        // Assign demo classes automatically for known local test users.
+        if ($persoenlicheDaten) {
+            $this->assignDemoClassIfApplicable($persoenlicheDaten, $preferredUsername, $email, $identityId);
+        }
+
         // Extract and set roles if available in JWT
         $roles = $this->extractRolesFromJwtClaims($claims);
         if (!empty($roles)) {
@@ -125,6 +132,38 @@ class KeycloakUserProvisioningService
         $this->logger->info('User provisioned successfully', ['identityId' => $identityId]);
 
         return $benutzer;
+    }
+
+    private function assignDemoClassIfApplicable(PersoenlicheDaten $persoenlicheDaten, ?string $preferredUsername, ?string $email, string $identityId): void
+    {
+        $targetClassName = null;
+
+        if ($preferredUsername === 'dummyuser' || $email === 'dummyuser@example.com') {
+            $targetClassName = 'Dummyklasse';
+        } elseif ($preferredUsername === 'studentuser' || $email === 'studentuser@example.com') {
+            $targetClassName = 'pbd2h24a';
+        }
+
+        if (!$targetClassName) {
+            return;
+        }
+
+        $klasse = $this->entityManager->getRepository(CalendarSource::class)->findOneBy(['className' => $targetClassName]);
+        if (!$klasse) {
+            $this->logger->warning('Demo class not found for auto-assignment', [
+                'identityId' => $identityId,
+                'targetClass' => $targetClassName,
+            ]);
+            return;
+        }
+
+        if ($persoenlicheDaten->getKlasse()?->getClassName() !== $targetClassName) {
+            $persoenlicheDaten->setKlasse($klasse);
+            $this->logger->info('Assigned demo class to user', [
+                'identityId' => $identityId,
+                'className' => $targetClassName,
+            ]);
+        }
     }
 
     /**
