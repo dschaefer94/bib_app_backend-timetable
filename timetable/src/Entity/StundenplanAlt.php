@@ -6,7 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 // use App\DBAL\Types\KalenderKategorieEnumType; // Import entfernt
 
-#[ORM\Entity(repositoryClass: StundenplanAltRepository::class)]
+#[ORM\Entity]
 #[ORM\Table(name: "stundenplan_alt")]
 class StundenplanAlt
 {

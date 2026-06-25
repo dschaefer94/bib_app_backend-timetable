@@ -5,14 +5,15 @@ namespace App\Command;
 use App\Entity\CalendarSource;
 use App\Service\CalendarImportService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+#[AsCommand(name: 'app:calendar:import', description: 'Import calendar for a class (by CalendarSource id)')]
 class CalendarImportCommand extends Command
 {
-    protected static $defaultName = 'app:calendar:import';
 
     public function __construct(private EntityManagerInterface $em, private CalendarImportService $importService)
     {

@@ -9,7 +9,6 @@ use App\Entity\GeaenderteTermine;
 use Doctrine\ORM\EntityManagerInterface;
 use Sabre\VObject\Reader;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Symfony\Component\Uid\Uuid;
 
 class CalendarSyncService
 {
@@ -48,14 +47,12 @@ class CalendarSyncService
         foreach ($vcalendar->VEVENT as $vevent) {
             $uid = (string)$vevent->UID;
             $newEvent = new StundenplanNeu();
-            $newEvent->setId(Uuid::fromString($uid)); // Annahme: UID ist eine gültige UUID
             $newEvent->setSummary((string)$vevent->SUMMARY);
             $newEvent->setDescription((string)$vevent->DESCRIPTION);
             $newEvent->setStart(new \DateTimeImmutable($vevent->DTSTART->getDateTime()->format('Y-m-d H:i:s')));
             $newEvent->setEnd(new \DateTimeImmutable($vevent->DTEND->getDateTime()->format('Y-m-d H:i:s')));
             $newEvent->setLocation((string)$vevent->LOCATION);
-            // Weitere Felder wie label, kategorie, originalEvent, updatedAt können hier gesetzt werden,
-            // falls sie im iCal-Feed vorhanden sind oder aus anderen Quellen stammen.
+            $newEvent->setOriginalEvent(['uid' => $uid]);
             $newEvent->setKlasse($klasse);
 
             $this->entityManager->persist($newEvent);
@@ -78,8 +75,6 @@ class CalendarSyncService
 
         foreach ($currentNeuEvents as $neuEvent) {
             $altEvent = new StundenplanAlt();
-            // Kopiere alle relevanten Daten von StundenplanNeu zu StundenplanAlt
-            $altEvent->setId($neuEvent->getId());
             $altEvent->setSummary($neuEvent->getSummary());
             $altEvent->setDescription($neuEvent->getDescription());
             $altEvent->setStart($neuEvent->getStart());
@@ -112,26 +107,30 @@ class CalendarSyncService
         $stundenplanAltRepository = $this->entityManager->getRepository(StundenplanAlt::class);
         $oldEvents = $stundenplanAltRepository->findBy(['klasse' => $klasse]);
 
+        if (empty($oldEvents)) {
+            return;
+        }
+
         $oldEventsMap = [];
         foreach ($oldEvents as $event) {
-            $oldEventsMap[$event->getId()->toRfc4122()] = $event;
+            $oldEventsMap[$this->getEventKey($event)] = $event;
         }
 
         // Gelöschte Termine
         foreach ($oldEventsMap as $uid => $oldEvent) {
             if (!isset($newEvents[$uid])) {
-                $this->logChange($oldEvent, 'deleted');
+                $this->logChange($oldEvent, 'gelöscht');
             }
         }
 
         // Hinzugefügte und geänderte Termine
         foreach ($newEvents as $uid => $newEvent) {
             if (!isset($oldEventsMap[$uid])) {
-                $this->logChange($newEvent, 'added');
+                $this->logChange($newEvent, 'neu');
             } else {
                 $oldEvent = $oldEventsMap[$uid];
                 if ($this->hasEventChanged($oldEvent, $newEvent)) {
-                    $this->logChange($newEvent, 'modified');
+                    $this->logChange($newEvent, 'geändert');
                 }
             }
         }
@@ -156,7 +155,6 @@ class CalendarSyncService
     private function logChange($event, string $changeType): void
     {
         $geaenderterTermin = new GeaenderteTermine();
-        $geaenderterTermin->setId($event->getId()); // ID des geänderten/gelöschten/hinzugefügten Events
         $geaenderterTermin->setSummary($event->getSummary());
         $geaenderterTermin->setDescription($event->getDescription());
         $geaenderterTermin->setStart($event->getStart());
@@ -171,5 +169,15 @@ class CalendarSyncService
 
         $this->entityManager->persist($geaenderterTermin);
         $this->entityManager->flush(); // Flush hier, um Änderungen sofort zu protokollieren
+    }
+
+    private function getEventKey(object $event): string
+    {
+        $originalEvent = method_exists($event, 'getOriginalEvent') ? $event->getOriginalEvent() : null;
+        if (is_array($originalEvent) && !empty($originalEvent['uid'])) {
+            return (string) $originalEvent['uid'];
+        }
+
+        return method_exists($event, 'getId') && $event->getId() ? (string) $event->getId() : spl_object_hash($event);
     }
 }

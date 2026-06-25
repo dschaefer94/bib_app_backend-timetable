@@ -6,7 +6,6 @@ use App\Entity\Benutzer;
 use App\Entity\CalendarSource;
 use App\Entity\PersoenlicheDaten;
 use App\Entity\StundenplanNeu;
-use App\Entity\AenderungsLabel; // Importiere die neue Entität
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\Uid\Uuid;
@@ -52,15 +51,6 @@ class AppFixtures extends Fixture
         // WICHTIG: Setze die inverse Seite der OneToOne-Beziehung
         $dummyUser->setPersoenlicheDaten($persoenlicheDaten);
         // Doctrine wird dies beim flush erkennen und die Beziehung korrekt speichern.
-
-        // --- AenderungsLabel Entitäten erstellen ---
-        $aenderungsLabels = [];
-        foreach (['gelöscht', 'neu', 'geändert'] as $labelName) {
-            $aenderungsLabel = new AenderungsLabel();
-            $aenderungsLabel->setName($labelName);
-            $manager->persist($aenderungsLabel);
-            $aenderungsLabels[$labelName] = $aenderungsLabel;
-        }
 
         // --- Zusätzliche Testtermine für StundenplanNeu ---
         $klasseName = $dummyKlasse->getClassName();

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Benutzer;
 use App\Entity\CalendarSource;
 use App\Service\CalendarImportService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -45,6 +46,14 @@ class CalendarSourceController extends AbstractController
         // Initial import: match-first (avoid marking all events as new)
         try {
             $summary = $this->importService->importFromIcalSource($source, false);
+            $user = $this->getUser();
+            if ($user instanceof Benutzer && $user->getPersoenlicheDaten()) {
+                $persoenlicheDaten = $user->getPersoenlicheDaten();
+                if ($persoenlicheDaten->getKlasse()?->getId() !== $source->getId()) {
+                    $persoenlicheDaten->setKlasse($source);
+                    $this->em->flush();
+                }
+            }
             // update last synced time
             $source->setLastSyncedAt(new \DateTime());
             $this->em->flush();
@@ -55,5 +64,37 @@ class CalendarSourceController extends AbstractController
 
         return new JsonResponse(['id' => $source->getId(), 'import_summary' => $summary], Response::HTTP_CREATED);
     }
-}
 
+    #[Route('/{id}/sync', name: 'sync_calendar_source', methods: ['POST'])]
+    public function sync(int $id): JsonResponse
+    {
+        $source = $this->em->getRepository(CalendarSource::class)->find($id);
+        if (!$source) {
+            return new JsonResponse([
+                'type' => '/problems/not-found',
+                'title' => 'Klasse not found',
+                'status' => 404,
+                'detail' => sprintf('No class with id "%d" found.', $id),
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        if (!$source->getIcalLink()) {
+            return new JsonResponse([
+                'type' => '/problems/invalid-request',
+                'title' => 'No ical_link configured',
+                'status' => 400,
+                'detail' => 'Set an ical_link before running sync.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $summary = $this->importService->importFromIcalSource($source, true);
+        $source->setLastSyncedAt(new \DateTime());
+        $this->em->flush();
+
+        return new JsonResponse([
+            'id' => $source->getId(),
+            'class' => $source->getClassName(),
+            'import_summary' => $summary,
+        ], Response::HTTP_OK);
+    }
+}

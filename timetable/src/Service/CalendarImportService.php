@@ -47,7 +47,10 @@ class CalendarImportService
             $events[] = $ev;
         }
 
-        $json = json_encode($events);
+        $json = json_encode($events, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($json === false) {
+            throw new \RuntimeException('Failed to encode imported calendar events as JSON: ' . json_last_error_msg());
+        }
 
         $conn = $this->entityManager->getConnection();
         // Use fetchOne helper to execute the statement with parameters. This avoids PDO prepare/execute binding oddities
@@ -64,4 +67,3 @@ class CalendarImportService
         return json_decode($resText, true) ?: [];
     }
 }
-

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Benutzer;
+use App\Entity\GeaenderteTermine;
 use App\Entity\StundenplanNeu;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -46,9 +47,34 @@ class CalendarApiController extends AbstractController
             ], Response::HTTP_NOT_FOUND);
         }
 
+        $className = $klasse->getClassName();
+        $classId = $klasse->getId();
+
+        // Legacy fallback: events directly assigned via `stundenplan_neu.klasse` string
         $entries = $this->entityManager
             ->getRepository(StundenplanNeu::class)
-            ->findBy(['klasse' => $klasse->getClassName()]);
+            ->findBy(['klasse' => $className]);
+
+        // Preferred mapping: many-to-many via join table stundenplan_neu_klasse
+        $mappedEntries = [];
+        if ($classId !== null) {
+            $mappedIds = $this->entityManager->getConnection()->fetchFirstColumn(
+                'SELECT stundenplan_neu_id FROM stundenplan_neu_klasse WHERE klassen_id = :id',
+                ['id' => $classId]
+            );
+
+            if (!empty($mappedIds)) {
+                $mappedEntries = $this->entityManager
+                    ->getRepository(StundenplanNeu::class)
+                    ->findBy(['id' => $mappedIds]);
+            }
+        }
+
+        $mergedById = [];
+        foreach (array_merge($entries, $mappedEntries) as $entry) {
+            $mergedById[(string) $entry->getId()] = $entry;
+        }
+        $entries = array_values($mergedById);
 
         $data = array_map(static function (StundenplanNeu $entry): array {
             return [
@@ -63,6 +89,26 @@ class CalendarApiController extends AbstractController
                 'updatedAt' => $entry->getUpdatedAt()?->format(DATE_ATOM),
             ];
         }, $entries);
+
+        // Include change history entries for the class with original event payload.
+        $changeEntries = $this->entityManager
+            ->getRepository(GeaenderteTermine::class)
+            ->findBy(['klasse' => $className], ['updatedAt' => 'DESC']);
+
+        foreach ($changeEntries as $change) {
+            $data[] = [
+                'id' => (string) $change->getId(),
+                'summary' => $change->getSummary(),
+                'description' => $change->getDescription(),
+                'start' => $change->getStart()->format(DATE_ATOM),
+                'end' => $change->getEnd()->format(DATE_ATOM),
+                'location' => $change->getLocation(),
+                'label' => $change->getChangeType(),
+                'kategorie' => $change->getKategorie(),
+                'originalEvent' => $change->getOriginalEvent(),
+                'updatedAt' => $change->getUpdatedAt()?->format(DATE_ATOM),
+            ];
+        }
 
         return new JsonResponse([
             'success' => true,

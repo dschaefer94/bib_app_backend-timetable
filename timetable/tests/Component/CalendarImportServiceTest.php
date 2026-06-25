@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Tests\Component;
 
 use App\Entity\CalendarSource;
@@ -9,34 +10,44 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 class CalendarImportServiceTest extends DatabaseIntegrationTest
 {
-    public function testImportCreatesEventAndMapping(): void
+    public function testImportCreatesUpdatesAndDeletesEventsWithStringLabels(): void
     {
-        // Prepare a simple iCal feed with one event
-        $ical = "BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:uid1\nSUMMARY:Test Event\nDTSTART:20260623T090000Z\nDTEND:20260623T100000Z\nLOCATION:Room 1\nEND:VEVENT\nEND:VCALENDAR";
+        $initialIcal = "BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:uid1\nSUMMARY:Test Event\nDESCRIPTION:Original description\nDTSTART:20260623T090000Z\nDTEND:20260623T100000Z\nLOCATION:Room 1\nEND:VEVENT\nBEGIN:VEVENT\nUID:uid2\nSUMMARY:Deleted Event\nDESCRIPTION:Will be removed\nDTSTART:20260623T110000Z\nDTEND:20260623T120000Z\nLOCATION:Room 2\nEND:VEVENT\nEND:VCALENDAR";
+        $updatedIcal = "BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:uid1\nSUMMARY:Test Event\nDESCRIPTION:Updated description\nDTSTART:20260623T090000Z\nDTEND:20260623T100000Z\nLOCATION:Room 1\nEND:VEVENT\nBEGIN:VEVENT\nUID:uid3\nSUMMARY:New Event\nDESCRIPTION:Brand new\nDTSTART:20260624T090000Z\nDTEND:20260624T100000Z\nLOCATION:Room 3\nEND:VEVENT\nEND:VCALENDAR";
 
-        $mockResponse = new MockResponse($ical, ['http_version' => '1.1']);
-        $mockClient = new MockHttpClient($mockResponse);
-
-        // Create a CalendarSource in DB
         $source = new CalendarSource();
         $source->setClassName('TEST_IMPORT');
         $source->setIcalLink('https://example.test/feed.ics');
         $this->entityManager->persist($source);
         $this->entityManager->flush();
 
-        // Instantiate service with mock client
-        $importService = new CalendarImportService($this->entityManager, $mockClient);
+        $importService = new CalendarImportService(
+            $this->entityManager,
+            new MockHttpClient(new MockResponse($initialIcal, ['http_version' => '1.1']))
+        );
 
-        $result = $importService->importFromIcalSource($source, false);
+        $firstResult = $importService->importFromIcalSource($source, true);
+        $this->assertSame(2, $firstResult['inserted']);
+        $this->assertSame(0, $firstResult['updated']);
+        $this->assertSame(0, $firstResult['deleted']);
 
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('inserted', $result);
-        $this->assertGreaterThanOrEqual(1, $result['inserted'], 'At least one event should have been inserted');
+        $importService = new CalendarImportService(
+            $this->entityManager,
+            new MockHttpClient(new MockResponse($updatedIcal, ['http_version' => '1.1']))
+        );
 
-        // Verify join table mapping exists
-        $conn = $this->entityManager->getConnection();
-        $count = (int)$conn->fetchOne('SELECT count(*) FROM stundenplan_neu_klasse WHERE klassen_id = ?', [$source->getId()]);
-        $this->assertGreaterThanOrEqual(1, $count, 'Join table should contain mapping for the new class');
+        $secondResult = $importService->importFromIcalSource($source, true);
+
+        $this->assertSame(1, $secondResult['inserted']);
+        $this->assertSame(1, $secondResult['updated']);
+        $this->assertSame(1, $secondResult['deleted']);
+
+        $rows = $this->entityManager->getConnection()->fetchAllAssociative(
+            'SELECT change_type, summary FROM geaenderte_termine ORDER BY summary'
+        );
+
+        $this->assertCount(2, $rows);
+        $this->assertContains(['change_type' => 'geändert', 'summary' => 'Test Event'], $rows);
+        $this->assertContains(['change_type' => 'gelöscht', 'summary' => 'Deleted Event'], $rows);
     }
 }
-

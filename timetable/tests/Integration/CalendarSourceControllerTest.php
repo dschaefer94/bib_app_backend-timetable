@@ -7,6 +7,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class CalendarSourceControllerTest extends KernelTestCase
 {
@@ -22,7 +23,12 @@ class CalendarSourceControllerTest extends KernelTestCase
         // controller calls flush twice: once after persist and once after setting lastSyncedAt
         $em->expects($this->exactly(2))->method('flush');
 
-        $controller = new CalendarSourceController($em, $stubImport);
+        $controller = new class($em, $stubImport) extends CalendarSourceController {
+            public function getUser(): ?UserInterface
+            {
+                return null;
+            }
+        };
 
         $payload = json_encode(['name' => 'API_TEST_CLASS', 'ical_link' => 'https://example.test/feed.ics']);
         $request = new Request([], [], [], [], [], [], $payload);
@@ -37,4 +43,3 @@ class CalendarSourceControllerTest extends KernelTestCase
         $this->assertTrue(array_key_exists('import_summary', $data) || array_key_exists('import_error', $data) || array_key_exists('id', $data));
     }
 }
-
