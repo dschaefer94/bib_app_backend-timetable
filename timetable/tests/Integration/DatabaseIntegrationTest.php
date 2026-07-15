@@ -111,27 +111,73 @@ DECLARE
     deleted INT := 0;
     details JSONB := '[]'::jsonb;
     fp TEXT;
+    incoming_uid TEXT;
     existing_id UUID;
     kname TEXT;
     incoming_fps TEXT[] := ARRAY[]::TEXT[];
+    incoming_uids TEXT[] := ARRAY[]::TEXT[];
     cur JSONB;
 BEGIN
     SELECT klassenname INTO kname FROM klassen WHERE klassen_id = p_klassen_id;
 
     FOR cur IN SELECT * FROM jsonb_array_elements(p_events) LOOP
         ev := cur;
+        incoming_uid := nullif(trim(coalesce(ev->>'uid', '')), '');
         fp := encode(digest(coalesce(ev->>'summary','') || '|' || (ev->>'start') || '|' || (ev->>'end') || '|' || coalesce(ev->>'location',''), 'sha256'), 'hex');
         incoming_fps := array_append(incoming_fps, fp);
+        IF incoming_uid IS NOT NULL THEN
+            incoming_uids := array_append(incoming_uids, incoming_uid);
+        END IF;
 
-        SELECT id INTO existing_id FROM stundenplan_neu WHERE fingerprint = fp LIMIT 1;
+        existing_id := NULL;
+        IF incoming_uid IS NOT NULL THEN
+            SELECT sn.id INTO existing_id
+              FROM stundenplan_neu sn
+              JOIN stundenplan_neu_klasse snk ON sn.id = snk.stundenplan_neu_id
+             WHERE snk.klassen_id = p_klassen_id
+               AND sn.original_event IS NOT NULL
+               AND sn.original_event->>'uid' = incoming_uid
+             LIMIT 1;
+        END IF;
+
+        IF existing_id IS NULL THEN
+            SELECT sn.id INTO existing_id
+              FROM stundenplan_neu sn
+              JOIN stundenplan_neu_klasse snk ON sn.id = snk.stundenplan_neu_id
+             WHERE snk.klassen_id = p_klassen_id
+               AND sn.fingerprint = fp
+             LIMIT 1;
+        END IF;
 
         IF existing_id IS NOT NULL THEN
-            PERFORM 1 FROM stundenplan_neu WHERE id = existing_id AND (summary IS NOT DISTINCT FROM ev->>'summary') AND (description IS NOT DISTINCT FROM ev->>'description') AND (location IS NOT DISTINCT FROM ev->>'location') AND (label IS NOT DISTINCT FROM ev->>'label') AND (kategorie IS NOT DISTINCT FROM ev->>'kategorie') AND (start = (ev->>'start')::timestamp) AND ("end" = (ev->>'end')::timestamp);
+            PERFORM 1 FROM stundenplan_neu
+             WHERE id = existing_id
+               AND summary IS NOT DISTINCT FROM left(coalesce(ev->>'summary',''), 255)
+               AND description IS NOT DISTINCT FROM ev->>'description'
+               AND location IS NOT DISTINCT FROM left(coalesce(ev->>'location',''), 255)
+               AND label IS NOT DISTINCT FROM left(coalesce(ev->>'label',''), 50)
+               AND kategorie IS NOT DISTINCT FROM left(coalesce(ev->>'kategorie',''), 50)
+               AND start = (ev->>'start')::timestamp
+               AND "end" = (ev->>'end')::timestamp;
             IF NOT FOUND THEN
                 INSERT INTO geaenderte_termine (id, summary, description, start, "end", location, label, kategorie, original_event, updated_at, klasse, change_type)
-                SELECT gen_random_uuid(), left(summary, 255), description, start, "end", left(coalesce(location, ''), 255), left(coalesce(label, ''), 50), left(coalesce(kategorie, ''), 50), to_jsonb(t), now(), kname, 'geändert' FROM stundenplan_neu t WHERE id = existing_id;
+                SELECT gen_random_uuid(), left(summary, 255), description, start, "end", left(coalesce(location, ''), 255), left(coalesce(label, ''), 50), left(coalesce(kategorie, ''), 50), to_jsonb(t), now(), kname, 'geändert'
+                  FROM stundenplan_neu t
+                 WHERE id = existing_id;
 
-                UPDATE stundenplan_neu SET summary = ev->>'summary', description = ev->>'description', location = ev->>'location', label = ev->>'label', kategorie = ev->>'kategorie', start = (ev->>'start')::timestamp, "end" = (ev->>'end')::timestamp, updated_at = now() WHERE id = existing_id;
+                UPDATE stundenplan_neu
+                   SET summary = left(coalesce(ev->>'summary', ''), 255),
+                       description = ev->>'description',
+                       location = left(coalesce(ev->>'location', ''), 255),
+                       label = left(coalesce(ev->>'label', ''), 50),
+                       kategorie = left(coalesce(ev->>'kategorie', ''), 50),
+                       original_event = CASE WHEN incoming_uid IS NOT NULL THEN jsonb_build_object('uid', incoming_uid) ELSE original_event END,
+                       start = (ev->>'start')::timestamp,
+                       "end" = (ev->>'end')::timestamp,
+                       updated_at = now(),
+                       klasse = kname,
+                       fingerprint = fp
+                 WHERE id = existing_id;
                 updated := updated + 1;
                 details := details || jsonb_build_object('op','updated','event_id', existing_id, 'fingerprint', fp);
             ELSE
@@ -141,17 +187,63 @@ BEGIN
             INSERT INTO stundenplan_neu_klasse (stundenplan_neu_id, klassen_id) VALUES (existing_id, p_klassen_id) ON CONFLICT DO NOTHING;
         ELSE
             INSERT INTO stundenplan_neu (id, summary, description, start, "end", location, label, kategorie, original_event, updated_at, klasse, fingerprint)
-            VALUES (gen_random_uuid(), left(coalesce(ev->>'summary', ''), 255), ev->>'description', (ev->>'start')::timestamp, (ev->>'end')::timestamp, left(coalesce(ev->>'location', ''), 255), left(coalesce(ev->>'label', ''), 50), left(coalesce(ev->>'kategorie', ''), 50), NULL, now(), kname, fp)
+            VALUES (
+                gen_random_uuid(),
+                left(coalesce(ev->>'summary', ''), 255),
+                ev->>'description',
+                (ev->>'start')::timestamp,
+                (ev->>'end')::timestamp,
+                left(coalesce(ev->>'location', ''), 255),
+                left(coalesce(ev->>'label', ''), 50),
+                left(coalesce(ev->>'kategorie', ''), 50),
+                CASE WHEN incoming_uid IS NOT NULL THEN jsonb_build_object('uid', incoming_uid) ELSE NULL END,
+                now(),
+                kname,
+                fp
+            )
             RETURNING id INTO existing_id;
 
             INSERT INTO stundenplan_neu_klasse (stundenplan_neu_id, klassen_id) VALUES (existing_id, p_klassen_id);
+            INSERT INTO geaenderte_termine (id, summary, description, start, "end", location, label, kategorie, original_event, updated_at, klasse, change_type)
+            VALUES (
+                gen_random_uuid(),
+                left(coalesce(ev->>'summary', ''), 255),
+                ev->>'description',
+                (ev->>'start')::timestamp,
+                (ev->>'end')::timestamp,
+                left(coalesce(ev->>'location', ''), 255),
+                left(coalesce(ev->>'label', ''), 50),
+                left(coalesce(ev->>'kategorie', ''), 50),
+                NULL,
+                now(),
+                kname,
+                'neu'
+            );
+
             inserted := inserted + 1;
             details := details || jsonb_build_object('op','inserted','event_id', existing_id, 'fingerprint', fp);
         END IF;
     END LOOP;
 
     IF p_full_sync THEN
-        FOR cur IN SELECT sn.id FROM stundenplan_neu sn JOIN stundenplan_neu_klasse snk ON sn.id = snk.stundenplan_neu_id WHERE snk.klassen_id = p_klassen_id AND (sn.fingerprint IS NULL OR NOT (sn.fingerprint = ANY(incoming_fps))) LOOP
+        FOR cur IN
+            SELECT sn.id
+              FROM stundenplan_neu sn
+              JOIN stundenplan_neu_klasse snk ON sn.id = snk.stundenplan_neu_id
+             WHERE snk.klassen_id = p_klassen_id
+               AND (
+                    (
+                        sn.original_event IS NOT NULL
+                        AND nullif(sn.original_event->>'uid', '') IS NOT NULL
+                        AND NOT (sn.original_event->>'uid' = ANY(incoming_uids))
+                    )
+                    OR
+                    (
+                        (sn.original_event IS NULL OR nullif(sn.original_event->>'uid', '') IS NULL)
+                        AND (sn.fingerprint IS NULL OR NOT (sn.fingerprint = ANY(incoming_fps)))
+                    )
+               )
+        LOOP
             INSERT INTO geaenderte_termine (id, summary, description, start, "end", location, label, kategorie, original_event, updated_at, klasse, change_type)
             SELECT gen_random_uuid(), left(sn.summary, 255), sn.description, sn.start, sn."end", left(coalesce(sn.location, ''), 255), left(coalesce(sn.label, ''), 50), left(coalesce(sn.kategorie, ''), 50), to_jsonb(sn), now(), kname, 'gelöscht' FROM stundenplan_neu sn WHERE sn.id = cur.id;
             DELETE FROM stundenplan_neu_klasse WHERE stundenplan_neu_id = cur.id AND klassen_id = p_klassen_id;

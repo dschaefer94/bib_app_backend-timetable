@@ -81,15 +81,18 @@ class CalendarApiController extends AbstractController
         $entries = array_values($mergedById);
 
         $data = array_map(function (StundenplanNeu $entry): array {
+            $summary = $entry->getSummary();
+
             return array_filter([
                 'id' => (string) $entry->getId(),
-                'summary' => $entry->getSummary(),
+                'summary' => $summary,
                 'description' => $entry->getDescription(),
                 'start' => $entry->getStart()->format(DATE_ATOM),
                 'end' => $entry->getEnd()->format(DATE_ATOM),
-                'location' => $entry->getLocation(),
+                'location' => $this->eventNormalizer->deriveLocation($summary, $entry->getLocation()),
+                'lecturer' => $this->eventNormalizer->deriveLecturer($summary),
                 'label' => $this->eventNormalizer->normalizeLabel($entry->getLabel()),
-                'category' => $this->eventNormalizer->normalizeCategory($entry->getKategorie()),
+                'category' => $this->eventNormalizer->deriveCategory($summary, $entry->getKategorie()),
                 'originalEvent' => $this->eventNormalizer->normalizeOriginalEvent($entry->getOriginalEvent()),
                 'updatedAt' => $entry->getUpdatedAt()?->format(DATE_ATOM),
             ], static fn (mixed $value): bool => $value !== null);
@@ -101,15 +104,18 @@ class CalendarApiController extends AbstractController
             ->findBy(['klasse' => $className], ['updatedAt' => 'DESC']);
 
         foreach ($changeEntries as $change) {
+            $summary = $change->getSummary();
+
             $data[] = array_filter([
                 'id' => (string) $change->getId(),
-                'summary' => $change->getSummary(),
+                'summary' => $summary,
                 'description' => $change->getDescription(),
                 'start' => $change->getStart()->format(DATE_ATOM),
                 'end' => $change->getEnd()->format(DATE_ATOM),
-                'location' => $change->getLocation(),
+                'location' => $this->eventNormalizer->deriveLocation($summary, $change->getLocation()),
+                'lecturer' => $this->eventNormalizer->deriveLecturer($summary),
                 'label' => $this->eventNormalizer->mapChangeTypeToLabel($change->getChangeType()) ?? $this->eventNormalizer->normalizeLabel($change->getLabel()),
-                'category' => $this->eventNormalizer->normalizeCategory($change->getKategorie()),
+                'category' => $this->eventNormalizer->deriveCategory($summary, $change->getKategorie()),
                 'originalEvent' => $this->eventNormalizer->normalizeOriginalEvent($change->getOriginalEvent()),
                 'updatedAt' => $change->getUpdatedAt()?->format(DATE_ATOM),
             ], static fn (mixed $value): bool => $value !== null);

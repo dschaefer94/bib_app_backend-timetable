@@ -31,6 +31,11 @@ class CalendarImportServiceTest extends DatabaseIntegrationTest
         $this->assertSame(0, $firstResult['updated']);
         $this->assertSame(0, $firstResult['deleted']);
 
+        $newLabelsAfterFirstImport = (int) $this->entityManager->getConnection()->fetchOne(
+            "SELECT count(*) FROM geaenderte_termine WHERE change_type = 'neu'"
+        );
+        $this->assertSame(2, $newLabelsAfterFirstImport);
+
         $importService = new CalendarImportService(
             $this->entityManager,
             new MockHttpClient(new MockResponse($updatedIcal, ['http_version' => '1.1']))
@@ -43,11 +48,12 @@ class CalendarImportServiceTest extends DatabaseIntegrationTest
         $this->assertSame(1, $secondResult['deleted']);
 
         $rows = $this->entityManager->getConnection()->fetchAllAssociative(
-            'SELECT change_type, summary FROM geaenderte_termine ORDER BY summary'
+            'SELECT change_type, summary FROM geaenderte_termine ORDER BY summary, change_type'
         );
 
-        $this->assertCount(2, $rows);
+        $this->assertCount(5, $rows);
         $this->assertContains(['change_type' => 'geändert', 'summary' => 'Test Event'], $rows);
+        $this->assertContains(['change_type' => 'neu', 'summary' => 'New Event'], $rows);
         $this->assertContains(['change_type' => 'gelöscht', 'summary' => 'Deleted Event'], $rows);
     }
 }

@@ -41,6 +41,7 @@ class KeycloakUserProvisioningService
         $givenName = $claims['given_name'] ?? null;
         $familyName = $claims['family_name'] ?? null;
         $preferredUsername = $claims['preferred_username'] ?? null;
+        $claimedClassName = $this->extractClassNameFromClaims($claims);
 
         if (!$identityId) {
             throw new \InvalidArgumentException('JWT claims must contain "sub" (identityId)');
@@ -119,7 +120,14 @@ class KeycloakUserProvisioningService
 
         // Assign demo classes automatically for known local test users.
         if ($persoenlicheDaten) {
-            $this->assignDemoClassIfApplicable($persoenlicheDaten, $preferredUsername, $email, $identityId);
+            $assignedFromClaim = false;
+            if ($claimedClassName) {
+                $assignedFromClaim = $this->assignClassByNameIfExists($persoenlicheDaten, $claimedClassName, $identityId, 'claims');
+            }
+            if (!$assignedFromClaim) {
+                $this->assignDemoClassIfApplicable($persoenlicheDaten, $preferredUsername, $email, $identityId);
+            }
+            $this->ensureFallbackDummyClass($persoenlicheDaten, $identityId);
         }
 
         // Extract and set roles if available in JWT
@@ -148,22 +156,78 @@ class KeycloakUserProvisioningService
             return;
         }
 
-        $klasse = $this->entityManager->getRepository(CalendarSource::class)->findOneBy(['className' => $targetClassName]);
+        $this->assignClassByNameIfExists($persoenlicheDaten, $targetClassName, $identityId, 'demo-fallback');
+    }
+
+    private function assignClassByNameIfExists(PersoenlicheDaten $persoenlicheDaten, string $className, string $identityId, string $source): bool
+    {
+        $klasse = $this->entityManager->getRepository(CalendarSource::class)->findOneBy(['className' => $className]);
         if (!$klasse) {
             $this->logger->warning('Demo class not found for auto-assignment', [
                 'identityId' => $identityId,
-                'targetClass' => $targetClassName,
+                'targetClass' => $className,
+                'source' => $source,
             ]);
-            return;
+            return false;
         }
 
-        if ($persoenlicheDaten->getKlasse()?->getClassName() !== $targetClassName) {
+        if ($persoenlicheDaten->getKlasse()?->getClassName() !== $className) {
             $persoenlicheDaten->setKlasse($klasse);
             $this->logger->info('Assigned demo class to user', [
                 'identityId' => $identityId,
-                'className' => $targetClassName,
+                'className' => $className,
+                'source' => $source,
             ]);
         }
+
+        return true;
+    }
+
+    private function ensureFallbackDummyClass(PersoenlicheDaten $persoenlicheDaten, string $identityId): void
+    {
+        if ($persoenlicheDaten->getKlasse() !== null) {
+            return;
+        }
+
+        $dummyClassName = 'Dummyklasse';
+        $dummy = $this->entityManager->getRepository(CalendarSource::class)->findOneBy(['className' => $dummyClassName]);
+        if (!$dummy) {
+            $dummy = new CalendarSource();
+            $dummy->setClassName($dummyClassName);
+            $dummy->setIcalLink('https://bibapp.pbd2h24asc.web.bib.de/empty.ics');
+            $this->entityManager->persist($dummy);
+            $this->logger->info('Created fallback dummy class', ['identityId' => $identityId, 'className' => $dummyClassName]);
+        }
+
+        $persoenlicheDaten->setKlasse($dummy);
+        $this->logger->info('Assigned fallback dummy class to user', ['identityId' => $identityId, 'className' => $dummyClassName]);
+    }
+
+    private function extractClassNameFromClaims(array $claims): ?string
+    {
+        $attributes = is_array($claims['attributes'] ?? null) ? $claims['attributes'] : [];
+        $candidates = [
+            $claims['klasse'] ?? null,
+            $claims['class'] ?? null,
+            $claims['custom:klasse'] ?? null,
+            $claims['custom:class'] ?? null,
+            $attributes['klasse'] ?? null,
+            $attributes['class'] ?? null,
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (is_array($candidate)) {
+                $candidate = $candidate[0] ?? null;
+            }
+            if (is_string($candidate) && trim($candidate) !== '') {
+                $value = trim($candidate);
+                if (preg_match('/^[\p{L}\p{N}._-]+$/u', $value)) {
+                    return $value;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -213,4 +277,3 @@ class KeycloakUserProvisioningService
         return array_unique($roles);
     }
 }
-

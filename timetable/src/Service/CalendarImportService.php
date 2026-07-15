@@ -38,6 +38,7 @@ class CalendarImportService
         $events = [];
         foreach ($vcalendar->VEVENT as $vevent) {
             $ev = [];
+            $ev['uid'] = isset($vevent->UID) ? (string)$vevent->UID : null;
             $ev['summary'] = isset($vevent->SUMMARY) ? (string)$vevent->SUMMARY : null;
             $ev['description'] = isset($vevent->DESCRIPTION) ? (string)$vevent->DESCRIPTION : null;
             $ev['start'] = (isset($vevent->DTSTART) ? $vevent->DTSTART->getDateTime()->format('Y-m-d H:i:s') : null);

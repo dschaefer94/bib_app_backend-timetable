@@ -91,15 +91,17 @@ class CalendarApiService implements CalendarApiInterface
                 continue;
             }
 
+            $summary = $entry->getSummary();
             $event = new CalendarEvent();
             $event->setId((string) $entry->getId());
-            $event->setSummary($entry->getSummary());
+            $event->setSummary($summary);
             $event->setDescription($entry->getDescription());
             $event->setStart(\DateTime::createFromImmutable($entry->getStart()));
             $event->setEnd(\DateTime::createFromImmutable($entry->getEnd()));
-            $event->setLocation($entry->getLocation());
+            $event->setLocation($this->eventNormalizer->deriveLocation($summary, $entry->getLocation()));
+            $event->setLecturer($this->eventNormalizer->deriveLecturer($summary));
             $event->setLabel($this->eventNormalizer->normalizeLabel($entry->getLabel()));
-            $event->setCategory($this->eventNormalizer->normalizeCategory($entry->getKategorie()));
+            $event->setCategory($this->eventNormalizer->deriveCategory($summary, $entry->getKategorie()));
 
             $normalizedOriginal = $this->eventNormalizer->normalizeOriginalEvent($entry->getOriginalEvent());
             $origDto = $this->buildOriginalEventDto($normalizedOriginal);
@@ -120,15 +122,17 @@ class CalendarApiService implements CalendarApiInterface
                         continue;
                     }
 
+                    $summary = $change->getSummary();
                     $event = new CalendarEvent();
                     $event->setId((string) $change->getId());
-                    $event->setSummary($change->getSummary());
+                    $event->setSummary($summary);
                     $event->setDescription($change->getDescription());
                     $event->setStart(\DateTime::createFromImmutable($change->getStart()));
                     $event->setEnd(\DateTime::createFromImmutable($change->getEnd()));
-                    $event->setLocation($change->getLocation());
+                    $event->setLocation($this->eventNormalizer->deriveLocation($summary, $change->getLocation()));
+                    $event->setLecturer($this->eventNormalizer->deriveLecturer($summary));
                     $event->setLabel($this->eventNormalizer->mapChangeTypeToLabel($change->getChangeType()) ?? $this->eventNormalizer->normalizeLabel($change->getLabel()));
-                    $event->setCategory($this->eventNormalizer->normalizeCategory($change->getKategorie()));
+                    $event->setCategory($this->eventNormalizer->deriveCategory($summary, $change->getKategorie()));
                     $event->setUpdatedAt($change->getUpdatedAt() ? \DateTime::createFromImmutable($change->getUpdatedAt()) : null);
 
                     $normalizedOriginal = $this->eventNormalizer->normalizeOriginalEvent($change->getOriginalEvent());

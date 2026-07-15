@@ -36,6 +36,48 @@ final class CalendarEventNormalizer
         };
     }
 
+    public function deriveLecturer(?string $summary): ?string
+    {
+        $parsed = $this->parseSummaryCodes($summary);
+
+        return $parsed['lecturer'];
+    }
+
+    public function deriveCategory(?string $summary, ?string $category): ?string
+    {
+        $parsed = $this->parseSummaryCodes($summary);
+
+        if ($parsed['isExam']) {
+            return 'klausur';
+        }
+
+        if ($parsed['lecturer'] === null) {
+            return 'selbstlernzeit';
+        }
+
+        return $this->normalizeCategory($category);
+    }
+
+    public function deriveLocation(?string $summary, ?string $location): ?string
+    {
+        if ($summary !== null) {
+            $segments = preg_split('/\s+/', trim($summary));
+            if (is_array($segments) && !empty($segments)) {
+                $lastSegment = rtrim((string) end($segments), ".,;:");
+                if (preg_match('/^P-([A-Za-z0-9]+)/', $lastSegment, $matches) === 1) {
+                    $roomValue = strtoupper($matches[1]);
+                    if (preg_match('/([A-Z])$/', $roomValue, $letterMatch) === 1) {
+                        return $letterMatch[1] . '-Pool';
+                    }
+
+                    return 'Raum ' . $roomValue;
+                }
+            }
+        }
+
+        return $location;
+    }
+
     public function mapChangeTypeToCode(?string $changeType): ?int
     {
         if ($changeType === null) {
@@ -125,5 +167,32 @@ final class CalendarEventNormalizer
         } catch (\Exception) {
             return null;
         }
+    }
+
+    /**
+     * @return array{subject: ?string, lecturer: ?string, isExam: bool}
+     */
+    private function parseSummaryCodes(?string $summary): array
+    {
+        if ($summary === null) {
+            return ['subject' => null, 'lecturer' => null, 'isExam' => false];
+        }
+
+        $trimmed = trim($summary);
+        if ($trimmed == '') {
+            return ['subject' => null, 'lecturer' => null, 'isExam' => false];
+        }
+
+        $isExam = str_starts_with($trimmed, '*');
+        $withoutExamMarker = ltrim($isExam ? substr($trimmed, 1) : $trimmed);
+
+        if (preg_match('/^([\p{L}]{3})([\p{L}]{3})?/u', $withoutExamMarker, $matches) !== 1) {
+            return ['subject' => null, 'lecturer' => null, 'isExam' => $isExam];
+        }
+
+        $subject = isset($matches[1]) ? mb_strtoupper($matches[1]) : null;
+        $lecturer = isset($matches[2]) && $matches[2] !== '' ? mb_strtoupper($matches[2]) : null;
+
+        return ['subject' => $subject, 'lecturer' => $lecturer, 'isExam' => $isExam];
     }
 }
