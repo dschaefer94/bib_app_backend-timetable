@@ -100,6 +100,14 @@ class CalendarEvent
 
     /**
      * @var string|null
+     * @SerializedName("lecturer")
+     * @Type("string")
+     */
+    #[Assert\Type("string")]
+    protected ?string $lecturer = null;
+
+    /**
+     * @var string|null
      * @SerializedName("label")
      * @Type("string")
      */
@@ -109,12 +117,12 @@ class CalendarEvent
 
     /**
      * @var string|null
-     * @SerializedName("kategorie")
+     * @SerializedName("category")
      * @Type("string")
      */
-    #[Assert\Choice(['klausur', 'bib-event', 'eigenes-event'])]
+    #[Assert\Choice(['selbstlernzeit', 'ferien', 'klausur', 'bib-event', 'eigenes-event'])]
     #[Assert\Type("string")]
-    protected ?string $kategorie = null;
+    protected ?string $category = null;
 
     /**
      * @var CalendarEventOriginalEvent|null
@@ -125,22 +133,14 @@ class CalendarEvent
     protected ?CalendarEventOriginalEvent $originalEvent = null;
 
     /**
+     * Zeitpunkt der letzten backendseitigen Aktualisierung eines geänderten Termins
+     *
      * @var \DateTime|null
      * @SerializedName("updatedAt")
      * @Type("DateTime")
      */
     #[Assert\Type("\DateTime")]
     protected ?\DateTime $updatedAt = null;
-
-    /**
-     * Der Typ der Änderung, falls es sich um einen geänderten Termin handelt. 1: gelöscht 2: neu 3: geändert
-     *
-     * @var int|null
-     * @SerializedName("changeType")
-     * @Type("int")
-     */
-    #[Assert\Type("int")]
-    protected ?int $changeType = null;
 
     /**
      * Constructor
@@ -155,11 +155,11 @@ class CalendarEvent
             $this->start = array_key_exists('start', $data) ? $data['start'] : $this->start;
             $this->end = array_key_exists('end', $data) ? $data['end'] : $this->end;
             $this->location = array_key_exists('location', $data) ? $data['location'] : $this->location;
+            $this->lecturer = array_key_exists('lecturer', $data) ? $data['lecturer'] : $this->lecturer;
             $this->label = array_key_exists('label', $data) ? $data['label'] : $this->label;
-            $this->kategorie = array_key_exists('kategorie', $data) ? $data['kategorie'] : $this->kategorie;
+            $this->category = array_key_exists('category', $data) ? $data['category'] : $this->category;
             $this->originalEvent = array_key_exists('originalEvent', $data) ? $data['originalEvent'] : $this->originalEvent;
             $this->updatedAt = array_key_exists('updatedAt', $data) ? $data['updatedAt'] : $this->updatedAt;
-            $this->changeType = array_key_exists('changeType', $data) ? $data['changeType'] : $this->changeType;
         }
     }
 
@@ -326,6 +326,33 @@ class CalendarEvent
 
 
     /**
+     * Gets lecturer.
+     *
+     * @return string|null
+     */
+    public function getLecturer(): ?string
+    {
+        return $this->lecturer;
+    }
+
+    /**
+     * Sets lecturer.
+     *
+     * @param string|null $lecturer
+     *
+     * @return $this
+     */
+    public function setLecturer(?string $lecturer = null): self
+    {
+        $this->lecturer = $lecturer;
+
+        return $this;
+    }
+
+
+
+
+    /**
      * Gets label.
      *
      * @return string|null
@@ -353,25 +380,25 @@ class CalendarEvent
 
 
     /**
-     * Gets kategorie.
+     * Gets category.
      *
      * @return string|null
      */
-    public function getKategorie(): ?string
+    public function getCategory(): ?string
     {
-        return $this->kategorie;
+        return $this->category;
     }
 
     /**
-     * Sets kategorie.
+     * Sets category.
      *
-     * @param string|null $kategorie
+     * @param string|null $category
      *
      * @return $this
      */
-    public function setKategorie(?string $kategorie = null): self
+    public function setCategory(?string $category = null): self
     {
-        $this->kategorie = $kategorie;
+        $this->category = $category;
 
         return $this;
     }
@@ -419,40 +446,13 @@ class CalendarEvent
     /**
      * Sets updatedAt.
      *
-     * @param \DateTime|null $updatedAt
+     * @param \DateTime|null $updatedAt  Zeitpunkt der letzten backendseitigen Aktualisierung eines geänderten Termins
      *
      * @return $this
      */
     public function setUpdatedAt(?\DateTime $updatedAt = null): self
     {
         $this->updatedAt = $updatedAt;
-
-        return $this;
-    }
-
-
-
-
-    /**
-     * Gets changeType.
-     *
-     * @return int|null
-     */
-    public function getChangeType(): ?int
-    {
-        return $this->changeType;
-    }
-
-    /**
-     * Sets changeType.
-     *
-     * @param int|null $changeType  Der Typ der Änderung, falls es sich um einen geänderten Termin handelt. 1: gelöscht 2: neu 3: geändert
-     *
-     * @return $this
-     */
-    public function setChangeType(?int $changeType = null): self
-    {
-        $this->changeType = $changeType;
 
         return $this;
     }

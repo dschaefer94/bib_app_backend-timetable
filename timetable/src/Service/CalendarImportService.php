@@ -10,6 +10,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class CalendarImportService
 {
+    private const HTTP_TIMEOUT_SECONDS = 20;
+    private const HTTP_RETRY_ATTEMPTS = 3;
+
     public function __construct(
         private EntityManagerInterface $entityManager,
         private HttpClientInterface $httpClient
@@ -24,12 +27,11 @@ class CalendarImportService
     public function importFromIcalSource(CalendarSource $source, bool $fullSync = true): array
     {
         $url = $source->getIcalLink();
-        if (empty($url)) {
+        if ($url === null || trim($url) === '') {
             throw new \InvalidArgumentException('No ical link configured for source id ' . $source->getId());
         }
 
-        $response = $this->httpClient->request('GET', $url, ['timeout' => 10]);
-        $content = $response->getContent();
+        $content = $this->downloadIcalContentWithRetry($url);
 
         $vcalendar = Reader::read($content);
 
@@ -64,6 +66,69 @@ class CalendarImportService
         $sql = "SELECT import_calendar_for_class($klassenId, $quotedJson::jsonb, $fullSyncSql)";
         $resText = $conn->fetchOne($sql);
 
+        $source->setLastSyncedAt(new \DateTime());
+        $this->entityManager->flush();
+
         return json_decode($resText, true) ?: [];
+    }
+
+    public function importAllSources(bool $fullSync = true): array
+    {
+        $sources = $this->entityManager->getRepository(CalendarSource::class)->findAll();
+        $summary = [
+            'totalSources' => count($sources),
+            'succeeded' => 0,
+            'failed' => 0,
+            'results' => [],
+        ];
+
+        foreach ($sources as $source) {
+            if (!$source instanceof CalendarSource) {
+                continue;
+            }
+
+            try {
+                $result = $this->importFromIcalSource($source, $fullSync);
+                $summary['succeeded']++;
+                $summary['results'][] = [
+                    'sourceId' => $source->getId(),
+                    'className' => $source->getClassName(),
+                    'status' => 'ok',
+                    'result' => $result,
+                ];
+            } catch (\Throwable $exception) {
+                $summary['failed']++;
+                $summary['results'][] = [
+                    'sourceId' => $source->getId(),
+                    'className' => $source->getClassName(),
+                    'status' => 'failed',
+                    'error' => $exception->getMessage(),
+                ];
+            }
+        }
+
+        return $summary;
+    }
+
+    private function downloadIcalContentWithRetry(string $url): string
+    {
+        $lastException = null;
+
+        for ($attempt = 1; $attempt <= self::HTTP_RETRY_ATTEMPTS; $attempt++) {
+            try {
+                $response = $this->httpClient->request('GET', $url, ['timeout' => self::HTTP_TIMEOUT_SECONDS]);
+                return $response->getContent();
+            } catch (\Throwable $exception) {
+                $lastException = $exception;
+                if ($attempt < self::HTTP_RETRY_ATTEMPTS) {
+                    usleep(250_000);
+                }
+            }
+        }
+
+        throw new \RuntimeException(
+            sprintf('Failed to download ICS feed after %d attempts: %s', self::HTTP_RETRY_ATTEMPTS, $url),
+            previous: $lastException
+        );
     }
 }

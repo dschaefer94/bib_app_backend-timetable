@@ -13,18 +13,6 @@ services:
     environment:
       DATABASE_URL: "postgresql://symfony:!ChangeMe!@database:5432/pbd2h24asc_stundenplan_db?serverVersion=16&charset=utf8"
 
-  worker:
-    build: .
-    command: php bin/console messenger:consume scheduler_main --repeat
-    volumes:
-      - .:/var/www/html
-    depends_on:
-      database:
-        condition: service_healthy
-    restart: always
-    environment:
-      DATABASE_URL: "postgresql://symfony:!ChangeMe!@database:5432/pbd2h24asc_stundenplan_db?serverVersion=16&charset=utf8"
-
   database:
     image: postgres:16-alpine
     environment:

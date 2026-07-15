@@ -153,6 +153,17 @@ class CalendarEventTest extends TestCase
     }
 
     /**
+     * Test attribute "lecturer"
+     *
+     * @group unit
+     * @small
+     */
+    public function testPropertyLecturer(): void
+    {
+        $this->markTestSkipped('Test for property lecturer not implemented');
+    }
+
+    /**
      * Test attribute "label"
      *
      * @group unit
@@ -164,14 +175,14 @@ class CalendarEventTest extends TestCase
     }
 
     /**
-     * Test attribute "kategorie"
+     * Test attribute "category"
      *
      * @group unit
      * @small
      */
-    public function testPropertyKategorie(): void
+    public function testPropertyCategory(): void
     {
-        $this->markTestSkipped('Test for property kategorie not implemented');
+        $this->markTestSkipped('Test for property category not implemented');
     }
 
     /**
@@ -194,16 +205,5 @@ class CalendarEventTest extends TestCase
     public function testPropertyUpdatedAt(): void
     {
         $this->markTestSkipped('Test for property updatedAt not implemented');
-    }
-
-    /**
-     * Test attribute "changeType"
-     *
-     * @group unit
-     * @small
-     */
-    public function testPropertyChangeType(): void
-    {
-        $this->markTestSkipped('Test for property changeType not implemented');
     }
 }

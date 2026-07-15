@@ -26,8 +26,8 @@ class CalendarSource
     public function getId(): ?int { return $this->id; }
     public function getClassName(): string { return $this->className; }
     public function setClassName(string $className): self { $this->className = $className; return $this; }
-    public function getIcalLink(): string { return $this->icalLink; }
-    public function setIcalLink(string $icalLink): self { $this->icalLink = $icalLink; return $this; }
-    public function getLastSyncedAt(): \DateTime { return $this->lastSyncedAt; }
-    public function setLastSyncedAt(\DateTime $lastSyncedAt): self { $this->lastSyncedAt = $lastSyncedAt; return $this; }
+    public function getIcalLink(): ?string { return $this->icalLink; }
+    public function setIcalLink(?string $icalLink): self { $this->icalLink = $icalLink; return $this; }
+    public function getLastSyncedAt(): ?\DateTime { return $this->lastSyncedAt; }
+    public function setLastSyncedAt(?\DateTime $lastSyncedAt): self { $this->lastSyncedAt = $lastSyncedAt; return $this; }
 }

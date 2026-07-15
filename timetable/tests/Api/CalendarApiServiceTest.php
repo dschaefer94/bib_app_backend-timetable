@@ -48,11 +48,8 @@ class CalendarApiServiceTest extends KernelTestCase
         // Überprüfe, ob die Antwort ein GetCalendar200Response-Objekt ist
         $this->assertInstanceOf(\App\OpenApi\Model\GetCalendar200Response::class, $response, 'Die Antwort sollte ein GetCalendar200Response-Objekt sein.');
 
-        // Überprüfe, ob 'success' true ist
-        $this->assertTrue($response->getSuccess(), 'Das "success"-Feld in der Antwort sollte true sein.');
-
         // Überprüfe, ob Daten vorhanden sind (mindestens die aus den Fixtures)
-        $this->assertNotEmpty($response->getData(), 'Das "data"-Feld in der Antwort sollte nicht leer sein.');
+        $this->assertNotEmpty($response->getEvents(), 'Das "events"-Feld in der Antwort sollte nicht leer sein.');
 
         // Optional: Überprüfe die Anzahl der Events oder spezifische Event-Details
         // $this->assertCount(anzahl_der_erwarteten_events, $response->getData());

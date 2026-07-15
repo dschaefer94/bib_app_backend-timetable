@@ -39,21 +39,25 @@ paths:
                     description: Stundenplan erfolgreich abgerufen
                     content:
                         application/json:
-                                    schema:
-                                        type: object
-                                        required:
-                                            - timestamp
-                                            - events
-                                        properties:
-                                            timestamp:
-                                                type: string
-                                                format: date-time
-                                                description: Zeitpunkt der Erstellung der Antwort
-                                                example: "2026-05-22T12:00:00+02:00"
-                                            events:
-                                                type: array
-                                                items:
-                                                    $ref: '#/components/schemas/CalendarEvent'
+                            schema:
+                                type: object
+                                required:
+                                    - success
+                                    - data
+                                    - timestamp
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    data:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/CalendarEvent'
+                                    timestamp:
+                                        type: string
+                                        format: date-time
+                                        description: Zeitpunkt der Erstellung der Antwort
+                                        example: "2026-05-22T12:00:00+02:00"
 
                 default:
                     description: Fachlicher oder technischer Fehler
@@ -189,20 +193,15 @@ components:
                     nullable: true
                     example: "Raum 101"
 
-                lecturer:
-                    type: string
-                    nullable: true
-                    example: "ABC"
-
                 label:
                     type: string
                     nullable: true
                     enum: [neu, gelöscht, geändert]
 
-                category:
+                kategorie:
                     type: string
                     nullable: true
-                    enum: [selbstlernzeit, ferien, klausur, bib-event, eigenes-event]
+                    enum: [klausur, bib-event, eigenes-event]
 
                 originalEvent:
                     type: object
@@ -225,7 +224,16 @@ components:
                     type: string
                     format: date-time
                     nullable: true
-                    description: Zeitpunkt der letzten backendseitigen Aktualisierung eines geänderten Termins
+
+                changeType: # Neues Feld hinzugefügt
+                    type: integer
+                    nullable: true
+                    description: |
+                        Der Typ der Änderung, falls es sich um einen geänderten Termin handelt.
+                        1: gelöscht
+                        2: neu
+                        3: geändert
+                    example: 1
 
         Problem:
             type: object

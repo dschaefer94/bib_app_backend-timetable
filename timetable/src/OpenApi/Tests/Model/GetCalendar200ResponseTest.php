@@ -87,28 +87,6 @@ class GetCalendar200ResponseTest extends TestCase
     }
 
     /**
-     * Test attribute "success"
-     *
-     * @group unit
-     * @small
-     */
-    public function testPropertySuccess(): void
-    {
-        $this->markTestSkipped('Test for property success not implemented');
-    }
-
-    /**
-     * Test attribute "data"
-     *
-     * @group unit
-     * @small
-     */
-    public function testPropertyData(): void
-    {
-        $this->markTestSkipped('Test for property data not implemented');
-    }
-
-    /**
      * Test attribute "timestamp"
      *
      * @group unit
@@ -117,5 +95,16 @@ class GetCalendar200ResponseTest extends TestCase
     public function testPropertyTimestamp(): void
     {
         $this->markTestSkipped('Test for property timestamp not implemented');
+    }
+
+    /**
+     * Test attribute "events"
+     *
+     * @group unit
+     * @small
+     */
+    public function testPropertyEvents(): void
+    {
+        $this->markTestSkipped('Test for property events not implemented');
     }
 }

@@ -9,6 +9,7 @@ use App\Entity\PersoenlicheDaten;
 use App\Entity\StundenplanNeu;
 use App\OpenApi\Model\CalendarEvent;
 use App\OpenApi\Model\GetCalendar200Response;
+use App\Service\CalendarEventNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use PHPUnit\Framework\TestCase;
@@ -43,7 +44,7 @@ class CalendarApiServiceTest extends TestCase
                 return $this->createMock(EntityRepository::class);
             });
 
-        $this->calendarApiService = new CalendarApiService($this->entityManagerMock);
+        $this->calendarApiService = new CalendarApiService($this->entityManagerMock, new CalendarEventNormalizer());
     }
 
     public function testCalendarApiReturnsEventsForExistingUserAndClass(): void
@@ -102,10 +103,9 @@ class CalendarApiServiceTest extends TestCase
 
         $this->assertEquals(200, $responseCode);
         $this->assertInstanceOf(GetCalendar200Response::class, $response);
-        $this->assertTrue($response->isSuccess()); // Geändert von getSuccess() zu isSuccess()
-        $this->assertCount(1, $response->getData());
-        $this->assertInstanceOf(CalendarEvent::class, $response->getData()[0]);
-        $this->assertEquals('Test Event', $response->getData()[0]->getSummary());
+        $this->assertCount(1, $response->getEvents());
+        $this->assertInstanceOf(CalendarEvent::class, $response->getEvents()[0]);
+        $this->assertEquals('Test Event', $response->getEvents()[0]->getSummary());
     }
 
     public function testCalendarApiReturns404IfPersonalDataNotFound(): void
@@ -209,7 +209,6 @@ class CalendarApiServiceTest extends TestCase
 
         $this->assertEquals(200, $responseCode);
         $this->assertInstanceOf(GetCalendar200Response::class, $response);
-        $this->assertTrue($response->isSuccess()); // Geändert von getSuccess() zu isSuccess()
-        $this->assertCount(0, $response->getData()); // Erwarte leeres Array
+        $this->assertCount(0, $response->getEvents()); // Erwarte leeres Array
     }
 }
